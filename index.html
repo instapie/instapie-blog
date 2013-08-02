@@ -15,13 +15,49 @@
         }
 
         body {
-            background-color: #ddd !important;
+            background-color: #ddd;
             font-family: "Source Sans Pro", sans-serif;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding: 12px;
+        }
+
+        nav ul {
+            list-style: none;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+        }
+
+        nav ul li a:visited {
+            color: #00f;
+        }
+
+        nav ul li a:hover {
+            color: #48f;
+        }
+
+        nav ul li.h1 a {
+            font-size: 150%;
+        }
+
+        nav ul li.h2 a {
+            font-size: 125%;
+            padding-left: 12px;
+        }
+
+        nav ul li.h3 a {
+            padding-left: 24px;
         }
 
         article {
             width: 960px;
-            background-color: #eee !important;
+            background-color: #eee;
             margin: 0 auto;
             padding: 24pt 32pt;
             min-height: 100%;
@@ -59,11 +95,11 @@
             cursor: pointer;
         }
 
-        *:hover {
+        article *:hover {
             background-color: #def;
         }
 
-        *:focus {
+        article *:focus {
             background-color: #ffe;
         }
 
@@ -82,12 +118,24 @@
 </head>
 
 <body>
+    <nav>
+        <ul>
+            <li class="h1"><a href="#articulate">Articulate</a></li>
+            <li class="h2"><a href="#what-dreams-are-made-of">What dreams are made of</a></li>
+            <li class="h3"><a href="#keyboard-shortcuts">Keyboard shortcuts</a></li>
+        </ul>
+    </nav>
+
     <article>
-        <h1 contenteditable="true">Articulate</h1>
-        <h2 contenteditable="true">What dreams are made of</h2>
+        <h1 id="articulate" contenteditable="true">Articulate</h1>
+        <h2 id="what-dreams-are-made-of" contenteditable="true">What dreams are made of</h2>
 
         <p contenteditable="true">
             This is a true WYSIWYG editor. You're editing HTML directly.
+        </p>
+
+        <p contenteditable="true">
+            As you type, the table of contents on the left is updated dynamically.
         </p>
 
         <h3 contenteditable="true">Keyboard shortcuts</h3>

@@ -104,6 +104,33 @@ function removeCurrentElement() {
   removeElement(getCurrentElement());
 }
 
+function updateNav() {
+  var navList = document.querySelector('nav > ul');
+  navList.innerHTML = '';
+
+  var headings = document.querySelectorAll('h1, h2, h3');
+  for (var i = 0; i < headings.length; ++i) {
+    setIdForHeading(headings[i]);
+    addNavListItemForHeading(navList, headings[i]);
+  }
+}
+
+function setIdForHeading(heading) {
+  var text = heading.textContent;
+  heading.id = text.replace(/[^\w]/g, '-').toLowerCase();
+}
+
+function addNavListItemForHeading(navList, heading) {
+  var item = document.createElement('LI');
+  item.className = heading.nodeName.toLowerCase();
+  navList.appendChild(item);
+
+  var link = document.createElement('A');
+  link.textContent = heading.textContent;
+  link.setAttribute('href', '#' + heading.id);
+  item.appendChild(link);
+}
+
 function expandArticle() {
   var articleStyle = getCssStyle('article');
   var width = parseInt(getCssStyle('article').width);
@@ -119,6 +146,10 @@ function contractArticle() {
 // Utils
 function getMinMax(x, y) {
   return x < y ? [x, y] : [y, x];
+}
+
+function doPeriodically(period, callback) {
+  setInterval(callback, period);
 }
 
 window.addEventListener('load', function() {
@@ -192,8 +223,10 @@ window.addEventListener('load', function() {
   });
 });
 
-setInterval(function() {
+doPeriodically(500, function() {
   var aside = document.getElementById('selection');
   var selection = window.getSelection();
   aside.textContent = 'Anchor offset: ' + selection.anchorOffset + ', focus offset: ' + selection.focusOffset;
-}, 500);
+});
+
+doPeriodically(1000, updateNav);
