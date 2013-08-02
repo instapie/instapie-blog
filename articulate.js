@@ -190,29 +190,6 @@ window.addEventListener('load', function() {
     //   changeSelectionTo('STRONG');
     // }
   });
-
-  var links = document.querySelectorAll('a[href^="#"]');
-  for (var i = 0; i < links.length; ++i) {
-    links[i].addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var href = this.getAttribute('href');
-      showElement(document.querySelector(href));
-    });
-  }
-
-  document.addEventListener('click', function(e) {
-    var elementsToHide = document.querySelectorAll('.auto-hide');
-    for (var i = 0; i < elementsToHide.length; ++i) {
-      if (elementsToHide[i] !== e.target) {
-        hideElement(elementsToHide[i]);
-      }
-    }
-  });
-});
-
-window.addEventListener('error', function(msg) {
-  alert('Error! ' + msg.message);
 });
 
 setInterval(function() {

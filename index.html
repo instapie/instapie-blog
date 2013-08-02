@@ -14,39 +14,57 @@
             width: 100%;
         }
 
+        body {
+            background-color: #ddd !important;
+            font-family: "Source Sans Pro", sans-serif;
+        }
+
         article {
             width: 960px;
+            background-color: #eee !important;
+            margin: 0 auto;
+            padding: 24pt 32pt;
+            min-height: 100%;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 48pt;
+            font-weight: 300;
+            min-height: 52pt;
+            border-bottom: 1px solid black;
+        }
+
+        h2 {
+            font-size: 40pt;
+            min-height: 42pt;
+            border-left: 8px solid #888;
+            padding-left: 16px;
+        }
+
+        h3 {
+            color: #444;
+            font-size: 32pt;
+            font-weight: bold;
+            min-height: 34pt;
+            border-left: 8px solid #bbb;
+            padding-left: 16px;
+        }
+
+        p {
+            min-height: 20px;
         }
 
         a {
             cursor: pointer;
         }
 
-        #presentation {
-            display: none;
-            position: fixed;
-            top: 20%;
-            bottom: 20%;
-            left: 20%;
-            right: 20%;
-            padding: 12px;
-            background-color: #000;
-            color: #fff;
-            font-family: 'Source Code Pro', monospace;
-            opacity: 0.8;
-            white-space: pre;
-            overflow: auto;
+        *:hover {
+            background-color: #def;
         }
 
-        #presentation:after {
-            display: block;
-            position: fixed;
-            top: 0;
-            right: 0;
-            padding: 1ex 1em;
-            content: 'Click anywhere outside the box to dismiss it.';
-            color: #000;
-            font-family: Helvetica, Arial, sans-serif;
+        *:focus {
+            background-color: #ffe;
         }
 
         #selection {
@@ -69,8 +87,7 @@
         <h2 contenteditable="true">What dreams are made of</h2>
 
         <p contenteditable="true">
-            This is a true WYSIWYG editor. You're editing HTML directly. The styles on this page are
-            all available <em><a href="#presentation">and editable</a></em>.
+            This is a true WYSIWYG editor. You're editing HTML directly.
         </p>
 
         <h3 contenteditable="true">Keyboard shortcuts</h3>
@@ -99,50 +116,6 @@
     <aside id="shortcuts"></aside>
 
     <aside id="selection"></aside>
-
-    <style id="presentation" type="text/css" class="no-shortcuts auto-hide" contenteditable="true">body {
-    background-color: #ddd;
-    font-family: "Source Sans Pro", sans-serif;
-}
-
-*:focus {
-    background-color: #ffe;
-}
-
-article {
-    background-color: #eee;
-    margin: 0 auto;
-    padding: 24pt 32pt;
-    min-height: 100%;
-    box-sizing: border-box;
-}
-
-h1 {
-    font-size: 48pt;
-    font-weight: 300;
-    min-height: 52pt;
-    border-bottom: 1px solid black;
-}
-
-h2 {
-    font-size: 40pt;
-    min-height: 42pt;
-    border-left: 8px solid #888;
-    padding-left: 16px;
-}
-
-h3 {
-    color: #444;
-    font-size: 32pt;
-    font-weight: bold;
-    min-height: 34pt;
-    border-left: 8px solid #bbb;
-    padding-left: 16px;
-}
-
-p {
-    min-height: 20px;
-}</style>
 </body>
 
 </html>
