@@ -293,17 +293,22 @@ window.addEventListener('load', function() {
     noticeItem.textContent = message;
     notices.insertBefore(noticeItem, notices.firstChild);
 
-    // Leave each notice up for 3 seconds...
-    doAfterDelay(3000, function() {
+    // Slide the notification in...
+    doAfterDelay(0, function() {
+      noticeItem.className = 'appear';
 
-      // Then blast it off the screen!
-      noticeItem.className = 'vanish';
+      // ...leave it for 3 seconds...
+      doAfterDelay(3000, function() {
 
-      // ...and remove it from the DOM (after blasting it).
-      doAfterDelay(500, function() {
-        notices.removeChild(noticeItem);
-      });
-    })
+        // ...then blast it off the screen!
+        noticeItem.removeAttribute('class');
+
+        // ...and remove it from the DOM (after blasting it).
+        doAfterDelay(500, function() {
+          notices.removeChild(noticeItem);
+        });
+      })
+    });
   }
 
   function save() {
