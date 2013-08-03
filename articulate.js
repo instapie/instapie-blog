@@ -235,6 +235,12 @@ function doPeriodically(period, callback) {
   setInterval(callback, period);
 }
 
+function inDevMode() {
+  return window.location.hostname === 'localhost';
+}
+
+// ----- Boot -----
+
 window.addEventListener('load', function() {
   var article = document.querySelector('article');
   var shortcutsTable = document.querySelector('#shortcuts table');
@@ -428,9 +434,12 @@ window.addEventListener('load', function() {
   updateNav();
 });
 
-doPeriodically(500, function() {
-  var selection = window.getSelection();
-  document.getElementById('anchor-offset').textContent = selection.anchorOffset;
-  document.getElementById('focus-offset').textContent = selection.focusOffset;
-  document.getElementById('total-offset').textContent = getTotalOffset(selection.anchorNode);
-});
+// Helpful stuff for local development
+if (inDevMode()) {
+  doPeriodically(500, function() {
+    var selection = window.getSelection();
+    document.getElementById('anchor-offset').textContent = selection.anchorOffset;
+    document.getElementById('focus-offset').textContent = selection.focusOffset;
+    document.getElementById('total-offset').textContent = getTotalOffset(selection.anchorNode);
+  });
+}
