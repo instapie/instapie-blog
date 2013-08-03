@@ -139,8 +139,8 @@ function getTotalOffset(element) {
   return offset;
 }
 
-function createNewElement(name) {
-  var oldElement = getCurrentElement();
+function insertNewElement(name, oldElement) {
+  oldElement = oldElement || getCurrentElement();
   var newElement = createElement(name, { contenteditable: true });
   oldElement.parentNode.insertBefore(newElement, oldElement.nextSibling);
   focus(newElement);
@@ -374,11 +374,21 @@ window.addEventListener('load', function() {
       for (var i = 0; i < autohideElements.length; ++i) {
         hideElement(autohideElements[i]);
       }
+
+      var currentElement = getCurrentElement();
+      if (currentElement) {
+        currentElement.blur();
+      }
+    }],
+
+    'ctrl+enter': ['inserts a new element before the current one', function(e) {
+      var currentElement = getCurrentElement();
+      insertNewElement(currentElement.nodeName, currentElement.previousSibling);
     }],
 
     'enter': ['creates a new element', function(e) {
       if (!e.shiftKey) {
-        createNewElement(getCurrentElement().nodeName);
+        insertNewElement(getCurrentElement().nodeName);
       }
     }],
 
@@ -443,8 +453,16 @@ window.addEventListener('load', function() {
       var anchorNode = selection.anchorNode;
       var range = getRange(selection);
 
-      getInput('Enter a URL', function(url) {
-        changeSelectionTo(anchorNode, range, 'A', { href: url });
+      getInput('Enter a URL', function(href) {
+        changeSelectionTo(anchorNode, range, 'A', { href: href });
+      });
+    }],
+
+    'ctrl+g': ['add a graphic (<img>)', function() {
+      var element = getCurrentElement();
+
+      getInput('Enter the URL of an image', function(src) {
+        changeElementTo(element, 'IMG', { src: src });
       });
     }]
   });
