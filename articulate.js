@@ -184,7 +184,7 @@ function doPeriodically(period, callback) {
 
 window.addEventListener('load', function() {
   var article = document.querySelector('article');
-  var shortcutsList = document.querySelector('#shortcuts dl');
+  var shortcutsTable = document.querySelector('#shortcuts table');
   var saveButton = document.getElementById('save');
 
   function save() {
@@ -208,9 +208,9 @@ window.addEventListener('load', function() {
 
   function bind(callbacks) {
     for (var sequence in callbacks) {
-      (function() {
-        var callback    = arguments[1];
-        var description = arguments[0];
+      (function(descriptionAndCallback) {
+        var callback    = descriptionAndCallback[1];
+        var description = descriptionAndCallback[0];
 
         Mousetrap.bindGlobal(sequence, function(e) {
           var cancel = true;
@@ -224,13 +224,16 @@ window.addEventListener('load', function() {
         });
 
         // Populate the shortcuts list
-        var shortcutItem = document.createElement('dt');
-        shortcutItem.innerHTML = '<kbd>' + sequence + '</kbd>';
-        shortcutsList.appendChild(shortcutItem);
+        var shortcutEntry = document.createElement('tr');
+        shortcutsTable.appendChild(shortcutEntry);
 
-        var shortcutDescription = document.createElement('dd');
+        var shortcutSequence = document.createElement('th');
+        shortcutSequence.innerHTML = '<kbd>' + sequence + '</kbd>';
+        shortcutEntry.appendChild(shortcutSequence);
+
+        var shortcutDescription = document.createElement('td');
         shortcutDescription.innerHTML = description;
-        shortcutItem.appendChild(shortcutDescription);
+        shortcutEntry.appendChild(shortcutDescription);
 
       }(callbacks[sequence]));
     }
