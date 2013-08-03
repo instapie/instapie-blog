@@ -48,6 +48,14 @@
             box-sizing: border-box;
         }
 
+        #shortcuts {
+            position: fixed;
+            bottom: 5px;
+            left: 5px;
+            color: #888;
+            font-size: small;
+        }
+
         #selection {
             position: fixed;
             bottom: 5px;
@@ -82,30 +90,26 @@
             As you type, the table of contents on the left is updated dynamically.
         </p>
 
-        <h3 contenteditable="true">Keyboard shortcuts</h3>
-        <ul>
-            <li contenteditable="true">
-                <kbd>Ctrl</kbd>+<kbd>1</kbd> sets the current element to a top-level heading (an
-                <code>&lt;H1&gt;</code> element).
-            </li>
-            <li contenteditable="true">
-                <kbd>Ctrl</kbd>+<kbd>2</kbd> sets the current element to a subheading (an
-                <code>&lt;H2&gt;</code> element).
-            </li>
-            <li contenteditable="true">
-                <kbd>Ctrl</kbd>+<kbd>3</kbd> sets the current element to a secondary subheading (an
-                <code>&lt;H3&gt;</code> element).
-            </li>
-            <li contenteditable="true">
-                <kbd>Ctrl</kbd>+<kbd>P</kbd> sets the current element to a regular paragraph.
-            </li>
-            <li contenteditable="true">
-                <kbd>Ctrl</kbd>+<kbd>L</kbd> converts the current element to a list.
-            </li>
-        </ul>
     </article>
 
-    <aside id="shortcuts"></aside>
+    <aside id="shortcuts">
+        <dl>
+            <dt><kbd>Ctrl</kbd>+<kbd>1</kbd></dt>
+            <dd>sets the current element to a top-level heading</dd>
+
+            <dt><kbd>Ctrl</kbd>+<kbd>2</kbd></dt>
+            <dd>sets the current element to a subheading</dd>
+
+            <dt><kbd>Ctrl</kbd>+<kbd>3</kbd></dt>
+            <dd>sets the current element to a secondary subheading</dd>
+
+            <dt><kbd>Ctrl</kbd>+<kbd>P</kbd></dt>
+            <dd>sets the current element to a regular paragraph</dd>
+
+            <dt><kbd>Ctrl</kbd>+<kbd>L</kbd></dt>
+            <dd>converts the current element to a list</dd>
+        </dl>
+    </aside>
 
     <aside id="selection"></aside>
 </body>
