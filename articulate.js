@@ -12,11 +12,17 @@ function getCurrentElement() {
 }
 
 function focus(element) {
-  setTimeout(function() { element.focus(); }, 0);
+  doAfterDelay(0, function() {
+    element.focus();
+  });
 }
 
 function dirty() {
   document.getElementById('save').textContent = 'Save*';
+}
+
+function pristine() {
+  document.getElementById('save').textContent = 'Save';
 }
 
 function showElement(element) {
@@ -232,7 +238,12 @@ function escapeHTML(html) {
 
 // I just hate how period is the second argument to setInterval.
 function doPeriodically(period, callback) {
-  setInterval(callback, period);
+  return setInterval(callback, period);
+}
+
+// Same with setTimeout!
+function doAfterDelay(delay, callback) {
+  return setTimeout(callback, delay);
 }
 
 function inDevMode() {
@@ -243,6 +254,7 @@ function inDevMode() {
 
 window.addEventListener('load', function() {
   var article = document.querySelector('article');
+  var notices = document.querySelector('#notices ul');
   var shortcutsTable = document.querySelector('#shortcuts table');
   var inputDialog = document.getElementById('modal-input');
   var inputField = inputDialog.querySelector('input');
@@ -276,9 +288,28 @@ window.addEventListener('load', function() {
     inputField.addEventListener('keydown', handler);
   }
 
+  function notify(message) {
+    var noticeItem = createElement('LI');
+    noticeItem.textContent = message;
+    notices.insertBefore(noticeItem, notices.firstChild);
+
+    // Leave each notice up for 3 seconds...
+    doAfterDelay(3000, function() {
+
+      // Then blast it off the screen!
+      noticeItem.className = 'vanish';
+
+      // ...and remove it from the DOM (after blasting it).
+      doAfterDelay(500, function() {
+        notices.removeChild(noticeItem);
+      });
+    })
+  }
+
   function save() {
     localStorage.article = article.innerHTML;
-    saveButton.textContent = 'Save';
+    pristine();
+    notify('Saved!');
   }
 
   function load() {

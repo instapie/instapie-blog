@@ -57,6 +57,30 @@
             color: #888;
         }
 
+        #notices {
+            position: fixed;
+            top: 0;
+            right: 0;
+            padding: 12px;
+        }
+
+        #notices ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        #notices ul li {
+            position: relative;
+            color: #888;
+            font-size: small;
+            transition: right 0.5s;
+        }
+
+        #notices ul li.vanish {
+            right: -1000px;
+            transition: right 0.5s;
+        }
+
         #toolbar {
             position: fixed;
             bottom: 0;
@@ -152,6 +176,10 @@
     <nav>
         <ul></ul>
     </nav>
+
+    <aside id="notices">
+        <ul></ul>
+    </aside>
 
     <article>
         <h1 id="articulate" contenteditable="true">Articulate</h1>
