@@ -84,6 +84,9 @@ function changeElementTo(oldElement, name) {
 
 function changeCurrentElementTo(name) {
   changeElementTo(getCurrentElement(), name);
+  if (isHeading(name)) {
+    updateNav();
+  }
 }
 
 function createNewElement(name) {
@@ -102,6 +105,10 @@ function removeElement(element) {
 
 function removeCurrentElement() {
   removeElement(getCurrentElement());
+}
+
+function isHeading(name) {
+  return !!name.match(/^h\d$/i);
 }
 
 function updateNav() {
@@ -221,6 +228,15 @@ window.addEventListener('load', function() {
     //   changeSelectionTo('STRONG');
     // }
   });
+
+  var article = document.querySelector('article');
+  article.addEventListener('input', function(e) {
+    if (isHeading(e.target.nodeName)) {
+      updateNav();
+    }
+  });
+
+  updateNav();
 });
 
 doPeriodically(500, function() {
@@ -228,5 +244,3 @@ doPeriodically(500, function() {
   var selection = window.getSelection();
   aside.textContent = 'Anchor offset: ' + selection.anchorOffset + ', focus offset: ' + selection.focusOffset;
 });
-
-doPeriodically(1000, updateNav);
