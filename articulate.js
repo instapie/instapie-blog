@@ -1,24 +1,38 @@
-function getCurrentElement() {
-  var selection = window.getSelection();
-  var element = selection.anchorNode;
-
+function getContainerElement(node) {
+  var element = node;
   while (element.nodeType !== 1) {
     element = element.parentNode;
   }
-
   return element;
+}
+
+function getCurrentElement() {
+  var selection = window.getSelection();
+  return getContainerElement(selection.anchorNode);
 }
 
 function focus(element) {
   setTimeout(function() { element.focus(); }, 0);
 }
 
+function dirty() {
+  document.getElementById('save').textContent = 'Save*';
+}
+
 function showElement(element) {
-  element.style.display = 'block';
+  element.className = 'autohide visible';
 }
 
 function hideElement(element) {
-  element.style.display = 'none';
+  element.className = 'autohide';
+}
+
+function createElement(name, attributes) {
+  var element = document.createElement(name);
+  for (var attribute in (attributes || {})) {
+    element.setAttribute(attribute, attributes[attribute]);
+  }
+  return element;
 }
 
 function ensureListExists(element) {
@@ -26,7 +40,7 @@ function ensureListExists(element) {
     return;
   }
 
-  var list = document.createElement('UL');
+  var list = createElement('UL');
   element.parentNode.insertBefore(list, element);
   list.appendChild(element);
 }
@@ -53,46 +67,75 @@ function moveAfterList(element) {
   list.parentNode.insertBefore(element, list.nextSibling);
 }
 
-function changeElementTo(oldElement, name) {
+function changeElementTo(oldElement, name, attributes) {
   if (name === 'LI') {
     ensureListExists(oldElement);
   } else {
     moveAfterList(oldElement);
   }
 
-  var newElement = document.createElement(name);
-  newElement.textContent = oldElement.textContent;
+  var newElement = createElement(name, attributes);
   newElement.setAttribute('contenteditable', true);
+  newElement.textContent = oldElement.textContent;
   oldElement.parentNode.replaceChild(newElement, oldElement);
   focus(newElement);
-}
 
-// This isn't working at the moment.
-// function changeSelectionTo(name) {
-//   var selection = window.getSelection();
-//   var range = getMinMax(selection.anchorOffset, selection.focusOffset);
-//   var html = getCurrentElement().innerHTML;
-
-//   getCurrentElement().innerHTML = [
-//     html.substring(0, range[0]),
-//     '<' + name + '>',
-//     html.substring(range[0], range[1]),
-//     '</' + name + '>',
-//     html.substring(range[1])
-//   ].join('');
-// }
-
-function changeCurrentElementTo(name) {
-  changeElementTo(getCurrentElement(), name);
   if (isHeading(name)) {
     updateNav();
   }
+
+  dirty();
+}
+
+function changeCurrentElementTo(name, attributes) {
+  changeElementTo(getCurrentElement(), name, attributes);
+}
+
+function changeSelectionTo(element, range, name, attributes) {
+  if (!element) {
+    return;
+  }
+
+  var container = getContainerElement(element);
+  var html = container.innerHTML;
+
+  var newElement = createElement(name, attributes);
+  newElement.innerHTML = html.substring(range[0], range[1]);
+
+  container.innerHTML = html.substring(0, range[0]) +
+    newElement.outerHTML + html.substring(range[1]);
+
+  dirty();
+}
+
+function changeCurrentSelectionTo(name, attributes) {
+  var selection = window.getSelection();
+  changeSelectionTo(selection.anchorNode, getRange(selection), name, attributes);
+}
+
+function getRange(selection) {
+  var range = getMinMax(selection.anchorOffset, selection.focusOffset);
+
+  // Adjust offsets based on where the current selection is within the parent.
+  var offset = getTotalOffset(selection.anchorNode);
+  range[0] += offset;
+  range[1] += offset;
+
+  return range;
+}
+
+function getTotalOffset(element) {
+  var offset = 0;
+  while (element && element.previousSibling) {
+    element = element.previousSibling;
+    offset += (element.outerHTML || element.textContent).length;
+  }
+  return offset;
 }
 
 function createNewElement(name) {
   var oldElement = getCurrentElement();
-  var newElement = document.createElement(name);
-  newElement.setAttribute('contenteditable', true);
+  var newElement = createElement(name, { contenteditable: true });
   oldElement.parentNode.insertBefore(newElement, oldElement.nextSibling);
   focus(newElement);
 }
@@ -132,13 +175,12 @@ function setIdForHeading(heading) {
 }
 
 function addNavListItemForHeading(navList, heading) {
-  var item = document.createElement('LI');
+  var item = createElement('LI');
   item.className = heading.nodeName.toLowerCase();
   navList.appendChild(item);
 
-  var link = document.createElement('A');
+  var link = createElement('A', { href: '#' + heading.id });
   link.textContent = heading.textContent;
-  link.setAttribute('href', '#' + heading.id);
   item.appendChild(link);
 }
 
@@ -173,11 +215,22 @@ function getNextTheme() {
   }
 }
 
-// Utils
+// ----- Utils -----
+
 function getMinMax(x, y) {
   return x < y ? [x, y] : [y, x];
 }
 
+// Thank you, StackOverflow :)
+// http://stackoverflow.com/questions/5251520/how-do-i-escape-some-html-in-javascript
+function escapeHTML(html) {
+  var pre = createElement('pre');
+  var text = document.createTextNode(html);
+  pre.appendChild(text);
+  return pre.innerHTML;
+}
+
+// I just hate how period is the second argument to setInterval.
 function doPeriodically(period, callback) {
   setInterval(callback, period);
 }
@@ -185,7 +238,37 @@ function doPeriodically(period, callback) {
 window.addEventListener('load', function() {
   var article = document.querySelector('article');
   var shortcutsTable = document.querySelector('#shortcuts table');
+  var inputDialog = document.getElementById('modal-input');
+  var inputField = inputDialog.querySelector('input');
   var saveButton = document.getElementById('save');
+
+  function getInput(caption, callback) {
+    inputField.setAttribute('placeholder', caption);
+    showElement(inputDialog);
+    focus(inputField);
+
+    var handler = function(e) {
+      if (e.keyCode === 13) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        try {
+          hideElement(inputDialog);
+
+          callback(inputField.value);
+
+          // Clean up.
+          inputField.removeAttribute('placeholder');
+          inputField.value = '';
+
+        } finally {
+          inputField.removeEventListener('keydown', handler);
+        }
+      }
+    };
+
+    inputField.addEventListener('keydown', handler);
+  }
 
   function save() {
     localStorage.article = article.innerHTML;
@@ -209,8 +292,8 @@ window.addEventListener('load', function() {
   function bind(callbacks) {
     for (var sequence in callbacks) {
       (function(descriptionAndCallback) {
-        var callback    = descriptionAndCallback[1];
-        var description = descriptionAndCallback[0];
+        var callback    = descriptionAndCallback.pop();
+        var description = descriptionAndCallback.pop();
 
         Mousetrap.bindGlobal(sequence, function(e) {
           var cancel = true;
@@ -223,16 +306,20 @@ window.addEventListener('load', function() {
           }
         });
 
+        if (!description) {
+          return;
+        }
+
         // Populate the shortcuts list
-        var shortcutEntry = document.createElement('tr');
+        var shortcutEntry = createElement('tr');
         shortcutsTable.appendChild(shortcutEntry);
 
-        var shortcutSequence = document.createElement('th');
+        var shortcutSequence = createElement('th');
         shortcutSequence.innerHTML = '<kbd>' + sequence + '</kbd>';
         shortcutEntry.appendChild(shortcutSequence);
 
-        var shortcutDescription = document.createElement('td');
-        shortcutDescription.innerHTML = description;
+        var shortcutDescription = createElement('td');
+        shortcutDescription.textContent = description;
         shortcutEntry.appendChild(shortcutDescription);
 
       }(callbacks[sequence]));
@@ -240,6 +327,13 @@ window.addEventListener('load', function() {
   }
 
   bind({
+    'esc': [function() {
+      var autohideElements = document.querySelectorAll('.autohide');
+      for (var i = 0; i < autohideElements.length; ++i) {
+        hideElement(autohideElements[i]);
+      }
+    }],
+
     'enter': ['creates a new element', function(e) {
       if (!e.shiftKey) {
         createNewElement(getCurrentElement().nodeName);
@@ -249,31 +343,32 @@ window.addEventListener('load', function() {
     'backspace': ['deletes the current element (if empty)', function() {
       if (getCurrentElement().textContent === '') {
         removeCurrentElement();
+        return;
       }
       return true;
     }],
 
-    'ctrl+1': ['changes the current element to a top-level heading', function() {
+    'ctrl+1': ['changes the current element to a top-level heading (<h1>)', function() {
       changeCurrentElementTo('H1');
     }],
 
-    'ctrl+2': ['changes the current element to a subheading', function() {
+    'ctrl+2': ['changes the current element to a subheading (<h2>)', function() {
       changeCurrentElementTo('H2');
     }],
 
-    'ctrl+3': ['changes the current element to a secondary subheading', function() {
+    'ctrl+3': ['changes the current element to a secondary subheading (<h3>)', function() {
       changeCurrentElementTo('H3');
     }],
 
-    'ctrl+p': ['changes the current element to a paragraph', function() {
+    'ctrl+p': ['changes the current element to a paragraph (<p>)', function() {
       changeCurrentElementTo('P');
     }],
 
-    'ctrl+l': ['changes the current element to a list item', function() {
+    'ctrl+l': ['changes the current element to a list item (<li>)', function() {
       changeCurrentElementTo('LI');
     }],
 
-    'ctrl+q': ['changes the current element to a blockquote', function() {
+    'ctrl+q': ['changes the current element to a blockquote (<blockquote>)', function() {
       changeCurrentElementTo('BLOCKQUOTE');
     }],
 
@@ -291,22 +386,32 @@ window.addEventListener('load', function() {
 
     'ctrl+s': ['saves the article locally', function() {
       save();
+    }],
+
+    'ctrl+i': ['makes the selected text italic', function() {
+      changeCurrentSelectionTo('EM');
+    }],
+
+    'ctrl+b': ['makes the selected text bold', function() {
+      changeCurrentSelectionTo('STRONG');
+    }],
+
+    'ctrl+r': ['add a reference/hyperlink (<a>)', function() {
+      var selection = window.getSelection();
+      var anchorNode = selection.anchorNode;
+      var range = getRange(selection);
+
+      getInput('Enter a URL', function(url) {
+        changeSelectionTo(anchorNode, range, 'A', { href: url });
+      });
     }]
-
-    // Let's not worry about these just yet.
-    // 'ctrl+i': function() {
-    //   changeSelectionTo('EM');
-    // },
-
-    // 'ctrl+b': function() {
-    //   changeSelectionTo('STRONG');
-    // }
   });
 
   // Whenever the user makes changes...
   article.addEventListener('input', function(e) {
+
     // ...mark the Save button...
-    saveButton.textContent = 'Save*';
+    dirty();
 
     // ...and update the nav menu (if applicable).
     if (isHeading(e.target.nodeName)) {
@@ -324,7 +429,8 @@ window.addEventListener('load', function() {
 });
 
 doPeriodically(500, function() {
-  var aside = document.getElementById('selection');
   var selection = window.getSelection();
-  aside.textContent = 'Anchor offset: ' + selection.anchorOffset + ', focus offset: ' + selection.focusOffset;
+  document.getElementById('anchor-offset').textContent = selection.anchorOffset;
+  document.getElementById('focus-offset').textContent = selection.focusOffset;
+  document.getElementById('total-offset').textContent = getTotalOffset(selection.anchorNode);
 });
