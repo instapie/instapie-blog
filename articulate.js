@@ -184,6 +184,7 @@ function doPeriodically(period, callback) {
 
 window.addEventListener('load', function() {
   var article = document.querySelector('article');
+  var shortcutsList = document.querySelector('#shortcuts dl');
   var saveButton = document.getElementById('save');
 
   function save() {
@@ -207,7 +208,10 @@ window.addEventListener('load', function() {
 
   function bind(callbacks) {
     for (var sequence in callbacks) {
-      (function(callback) {
+      (function() {
+        var callback    = arguments[1];
+        var description = arguments[0];
+
         Mousetrap.bindGlobal(sequence, function(e) {
           var cancel = true;
           try {
@@ -218,63 +222,73 @@ window.addEventListener('load', function() {
             }
           }
         });
+
+        // Populate the shortcuts list
+        var shortcutItem = document.createElement('dt');
+        shortcutItem.innerHTML = '<kbd>' + sequence + '</kbd>';
+        shortcutsList.appendChild(shortcutItem);
+
+        var shortcutDescription = document.createElement('dd');
+        shortcutDescription.innerHTML = description;
+        shortcutItem.appendChild(shortcutDescription);
+
       }(callbacks[sequence]));
     }
   }
 
   bind({
-    'enter': function(e) {
+    'enter': ['creates a new element', function(e) {
       if (!e.shiftKey) {
         createNewElement(getCurrentElement().nodeName);
       }
-    },
+    }],
 
-    'backspace': function() {
+    'backspace': ['deletes the current element (if empty)', function() {
       if (getCurrentElement().textContent === '') {
         removeCurrentElement();
       }
       return true;
-    },
+    }],
 
-    'ctrl+1': function() {
+    'ctrl+1': ['changes the current element to a top-level heading', function() {
       changeCurrentElementTo('H1');
-    },
+    }],
 
-    'ctrl+2': function() {
+    'ctrl+2': ['changes the current element to a subheading', function() {
       changeCurrentElementTo('H2');
-    },
+    }],
 
-    'ctrl+3': function() {
+    'ctrl+3': ['changes the current element to a secondary subheading', function() {
       changeCurrentElementTo('H3');
-    },
+    }],
 
-    'ctrl+p': function() {
+    'ctrl+p': ['changes the current element to a paragraph', function() {
       changeCurrentElementTo('P');
-    },
+    }],
 
-    'ctrl+l': function() {
+    'ctrl+l': ['changes the current element to a list item', function() {
       changeCurrentElementTo('LI');
-    },
+    }],
 
-    'ctrl+q': function() {
+    'ctrl+q': ['changes the current element to a blockquote', function() {
       changeCurrentElementTo('BLOCKQUOTE');
-    },
+    }],
 
-    'ctrl+=': function() {
+    'ctrl+=': ['increases the width of the article', function() {
       expandArticle();
-    },
+    }],
 
-    'ctrl+-': function() {
+    'ctrl+-': ['decreases the width of the article', function() {
       contractArticle();
-    },
+    }],
 
-    'ctrl+t': function() {
+    'ctrl+t': ['switches the current theme', function() {
       switchTheme();
-    },
+    }],
 
-    'ctrl+s': function() {
+    'ctrl+s': ['saves the article locally', function() {
       save();
-    }
+    }]
 
     // Let's not worry about these just yet.
     // 'ctrl+i': function() {
