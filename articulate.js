@@ -98,9 +98,13 @@ function createNewElement(name) {
 }
 
 function removeElement(element) {
+  var name = element.nodeName;
   var previousElement = element.previousSibling;
   element.parentNode.removeChild(element);
   focus(previousElement);
+  if (isHeading(name)) {
+    updateNav();
+  }
 }
 
 function removeCurrentElement() {
@@ -141,13 +145,13 @@ function addNavListItemForHeading(navList, heading) {
 function expandArticle() {
   var articleStyle = getCssStyle('article');
   var width = parseInt(getCssStyle('article').width);
-  articleStyle.width = (width + 100) + 'px';
+  articleStyle.width = (width + 5) + '%';
 }
 
 function contractArticle() {
   var articleStyle = getCssStyle('article');
   var width = parseInt(getCssStyle('article').width);
-  articleStyle.width = (width - 100) + 'px';
+  articleStyle.width = (width - 5) + '%';
 }
 
 function switchTheme(theme) {
@@ -179,6 +183,28 @@ function doPeriodically(period, callback) {
 }
 
 window.addEventListener('load', function() {
+  var article = document.querySelector('article');
+  var saveButton = document.getElementById('save');
+
+  function save() {
+    localStorage.article = article.innerHTML;
+    saveButton.textContent = 'Save';
+  }
+
+  function load() {
+    if (!localStorage) {
+      return;
+    }
+
+    if (localStorage.theme) {
+      switchTheme(localStorage.theme);
+    }
+
+    if (localStorage.article) {
+      article.innerHTML = localStorage.article;
+    }
+  }
+
   function bind(callbacks) {
     for (var sequence in callbacks) {
       (function(callback) {
@@ -230,6 +256,10 @@ window.addEventListener('load', function() {
       changeCurrentElementTo('LI');
     },
 
+    'ctrl+q': function() {
+      changeCurrentElementTo('BLOCKQUOTE');
+    },
+
     'ctrl+=': function() {
       expandArticle();
     },
@@ -240,6 +270,10 @@ window.addEventListener('load', function() {
 
     'ctrl+t': function() {
       switchTheme();
+    },
+
+    'ctrl+s': function() {
+      save();
     }
 
     // Let's not worry about these just yet.
@@ -252,17 +286,23 @@ window.addEventListener('load', function() {
     // }
   });
 
-  var article = document.querySelector('article');
+  // Whenever the user makes changes...
   article.addEventListener('input', function(e) {
+    // ...mark the Save button...
+    saveButton.textContent = 'Save*';
+
+    // ...and update the nav menu (if applicable).
     if (isHeading(e.target.nodeName)) {
       updateNav();
     }
   });
 
-  if (localStorage.theme) {
-    switchTheme(localStorage.theme);
-  }
+  // Allow the user to save what he/she's written to localStorage.
+  saveButton.addEventListener('click', function() {
+    save();
+  });
 
+  load();
   updateNav();
 });
 

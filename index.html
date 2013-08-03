@@ -41,11 +41,33 @@
         }
 
         article {
-            width: 960px;
+            width: 50%;
             margin: 0 auto;
             padding: 24pt 32pt;
             min-height: 100%;
             box-sizing: border-box;
+        }
+
+        article p:empty {
+            background-color: #fee;
+        }
+
+        article p:empty:after {
+            content: "(empty paragraph)";
+            color: #888;
+        }
+
+        #toolbar {
+            position: fixed;
+            bottom: 0;
+            left: 25%;
+            right: 25%;
+            padding: 12px;
+            text-align: right;
+        }
+
+        #toolbar button {
+            padding: 8px;
         }
 
         #shortcuts {
@@ -89,8 +111,11 @@
         <p contenteditable="true">
             As you type, the table of contents on the left is updated dynamically.
         </p>
-
     </article>
+
+    <div id="toolbar">
+        <button id="save">Save</button>
+    </div>
 
     <aside id="shortcuts">
         <dl>
