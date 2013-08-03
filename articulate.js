@@ -255,6 +255,31 @@ function getNextTheme() {
   }
 }
 
+function notify(message, className, attributes) {
+  var notices = document.querySelector('#notices ul');
+  var noticeItem = createElement('LI', attributes);
+  noticeItem.className = className;
+  noticeItem.textContent = message;
+  notices.insertBefore(noticeItem, notices.firstChild);
+
+  // Slide the notification in...
+  doAfterDelay(0, function() {
+    addClass(noticeItem, 'appear');
+
+    // ...leave it for 3 seconds...
+    doAfterDelay(3000, function() {
+
+      // ...then blast it off the screen!
+      removeClass(noticeItem, 'appear');
+
+      // ...and remove it from the DOM (after blasting it).
+      doAfterDelay(500, function() {
+        notices.removeChild(noticeItem);
+      });
+    })
+  });
+}
+
 // ----- Utils -----
 
 function getMinMax(x, y) {
@@ -297,6 +322,26 @@ function removeFromArray(array, element) {
   }
 }
 
+function isEditing() {
+  var element = getCurrentElement();
+
+  while (element) {
+    // As soon as we reach the <article>, we're done.
+    if (element.nodeName === 'ARTICLE') {
+      return true;
+    }
+
+    // If we reach <body>, we've gone too far.
+    if (element.nodeName === 'BODY') {
+      return false;
+    }
+
+    element = element.parentNode;
+  }
+
+  return false;
+}
+
 function inDevMode() {
   return window.location.hostname === 'localhost';
 }
@@ -305,7 +350,6 @@ function inDevMode() {
 
 window.addEventListener('load', function() {
   var article        = document.querySelector('article');
-  var notices        = document.querySelector('#notices ul');
   var shortcutsTable = document.querySelector('#shortcuts table');
   var inputDialog    = document.getElementById('modal-input');
   var inputField     = inputDialog.querySelector('input');
@@ -352,7 +396,7 @@ window.addEventListener('load', function() {
 
     showElement(listDialog);
 
-    var handler = function(e) {
+    var clickHandler = function(e) {
       try {
         hideElement(listDialog);
 
@@ -363,34 +407,59 @@ window.addEventListener('load', function() {
         inputList.innerHTML = '';
 
       } finally {
-        listDialog.removeEventListener('click', handler);
+        Mousetrap.unbind(['up', 'down', 'enter']);
+        listDialog.removeEventListener('click', clickHandler);
       }
     };
 
-    listDialog.addEventListener('click', handler);
-  }
+    listDialog.addEventListener('click', clickHandler);
 
-  function notify(message, className, attributes) {
-    var noticeItem = createElement('LI', attributes);
-    noticeItem.className = className;
-    noticeItem.textContent = message;
-    notices.insertBefore(noticeItem, notices.firstChild);
+    bind(false, {
+      'up': [function() {
+        var selectedItem = inputList.querySelector('li.selected');
 
-    // Slide the notification in...
-    doAfterDelay(0, function() {
-      addClass(noticeItem, 'appear');
+        // Start with the last item by default.
+        if (!selectedItem) {
+          addClass(inputList.lastChild, 'selected');
+          return;
+        }
 
-      // ...leave it for 3 seconds...
-      doAfterDelay(3000, function() {
+        removeClass(selectedItem, 'selected');
+        addClass(selectedItem.previousSibling || inputList.lastChild, 'selected');
+      }],
 
-        // ...then blast it off the screen!
-        removeClass(noticeItem, 'appear');
+      'down': [function() {
+        var selectedItem = inputList.querySelector('li.selected');
 
-        // ...and remove it from the DOM (after blasting it).
-        doAfterDelay(500, function() {
-          notices.removeChild(noticeItem);
-        });
-      })
+        // Start with the first item by default.
+        if (!selectedItem) {
+          addClass(inputList.firstChild, 'selected');
+          return;
+        }
+
+        removeClass(selectedItem, 'selected');
+        addClass(selectedItem.nextSibling || inputList.firstChild, 'selected');
+      }],
+
+      'enter': [function() {
+        var selectedItem = inputList.querySelector('li.selected');
+
+        if (!selectedItem) {
+          return;
+        }
+
+        try {
+          hideElement(listDialog);
+
+          callback(selectedItem.textContent);
+
+          inputList.innerHTML = '';
+
+        } finally {
+          Mousetrap.unbind(['up', 'down', 'enter']);
+          listDialog.removeEventListener('click', clickHandler);
+        }
+      }]
     });
   }
 
@@ -461,13 +530,13 @@ window.addEventListener('load', function() {
     });
   }
 
-  function bind(callbacks) {
+  function bind(applyGlobally, callbacks) {
     for (var sequence in callbacks) {
       (function(descriptionAndCallback) {
         var callback    = descriptionAndCallback.pop();
         var description = descriptionAndCallback.pop();
 
-        Mousetrap.bindGlobal(sequence, function(e) {
+        Mousetrap[applyGlobally ? 'bindGlobal' : 'bind'](sequence, function(e) {
           var cancel = true;
           try {
             cancel = !callback.apply(this, arguments);
@@ -498,7 +567,7 @@ window.addEventListener('load', function() {
     }
   }
 
-  bind({
+  bind(true, {
     'esc': [function() {
       var autohideElements = document.querySelectorAll('.autohide');
       for (var i = 0; i < autohideElements.length; ++i) {
@@ -517,6 +586,10 @@ window.addEventListener('load', function() {
     }],
 
     'enter': ['creates a new element', function(e) {
+      if (!isEditing()) {
+        return;
+      }
+
       if (!e.shiftKey) {
         insertNewElement(getCurrentElement().nodeName);
       }
