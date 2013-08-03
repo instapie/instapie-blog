@@ -82,13 +82,18 @@
             position: relative;
             right: -1000px;
             color: #888;
-            font-size: small;
+            font-size: 75%;
             transition: right 0.5s;
         }
 
         #notices ul li.appear {
             right: 0;
             transition: right 0.5s;
+        }
+
+        #notices ul li.error {
+            color: #f00;
+            font-weight: bold;
         }
 
         #toolbar {
@@ -139,6 +144,49 @@
             margin-top: -25px;
             background-color: #fff;
             font-size: 24pt;
+        }
+
+        #modal-list {
+            position: fixed;
+            top: 50%;
+            left: 30%;
+            right: 30%;
+            height: 400px;
+            margin-top: -200px;
+            color: #fff;
+            z-index: 1;
+        }
+
+        #modal-list:before {
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            content: "";
+            background: #000;
+            opacity: 0.5;
+            filter: alpha(opacity=50);
+            z-index: -1;
+        }
+
+        #modal-list ul {
+            list-style: none;
+            width: 50%;
+            margin: auto;
+            padding-left: 0;
+        }
+
+        #modal-list ul li {
+            padding: 8px;
+            cursor: pointer;
+            font-size: 150%;
+        }
+
+        #modal-list ul li.selected,
+        #modal-list ul li:hover {
+            color: #def;
         }
 
         #shortcuts {
@@ -210,6 +258,10 @@
 
     <div id="modal-input" class="autohide">
         <input type="text" />
+    </div>
+
+    <div id="modal-list" class="autohide">
+        <ul></ul>
     </div>
 
     <aside id="shortcuts">

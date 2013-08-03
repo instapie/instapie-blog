@@ -25,12 +25,36 @@ function pristine() {
   document.getElementById('save').textContent = 'Save';
 }
 
+function addClass(element, className) {
+  if (element.classList) {
+    element.classList.add(className);
+    return;
+  }
+
+  var classes = element.className.split(/\s+/);
+  if (!arrayContains(classes, className)) {
+    classes.push(className);
+    element.className = classes.join(' ');
+  }
+}
+
+function removeClass(element, className) {
+  if (element.classList) {
+    element.classList.remove(className);
+    return;
+  }
+
+  var classes = element.className.split(/\s+/);
+  removeFromArray(classes, className);
+  element.className = classes.join(' ');
+}
+
 function showElement(element) {
-  element.className = 'autohide visible';
+  addClass(element, 'visible');
 }
 
 function hideElement(element) {
-  element.className = 'autohide';
+  removeClass(element, 'visible');
 }
 
 function createElement(name, attributes) {
@@ -164,6 +188,10 @@ function isHeading(name) {
   return !!name.match(/^h\d$/i);
 }
 
+function isEmpty(text) {
+  return !!text.match(/^\s*$/);
+}
+
 function updateNav() {
   var navList = document.querySelector('nav > ul');
   navList.innerHTML = '';
@@ -178,6 +206,12 @@ function updateNav() {
 function setIdForHeading(heading) {
   var text = heading.textContent;
   heading.id = text.replace(/[^\w]/g, '-').toLowerCase();
+}
+
+function addItemToList(list, itemText) {
+  var listItem = createElement('LI');
+  listItem.textContent = itemText;
+  list.appendChild(listItem);
 }
 
 function addNavListItemForHeading(navList, heading) {
@@ -246,6 +280,23 @@ function doAfterDelay(delay, callback) {
   return setTimeout(callback, delay);
 }
 
+function arrayContains(array, element) {
+  for (var i = 0; i < array.length; ++i) {
+    if (array[i] === element) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function removeFromArray(array, element) {
+  for (var i = array.length - 1; i >= 0; --i) {
+    if (array[i] === element) {
+      array.splice(i, 1);
+    }
+  }
+}
+
 function inDevMode() {
   return window.location.hostname === 'localhost';
 }
@@ -253,12 +304,15 @@ function inDevMode() {
 // ----- Boot -----
 
 window.addEventListener('load', function() {
-  var article = document.querySelector('article');
-  var notices = document.querySelector('#notices ul');
+  var article        = document.querySelector('article');
+  var notices        = document.querySelector('#notices ul');
   var shortcutsTable = document.querySelector('#shortcuts table');
-  var inputDialog = document.getElementById('modal-input');
-  var inputField = inputDialog.querySelector('input');
-  var saveButton = document.getElementById('save');
+  var inputDialog    = document.getElementById('modal-input');
+  var inputField     = inputDialog.querySelector('input');
+  var listDialog     = document.getElementById('modal-list');
+  var inputList      = listDialog.querySelector('ul');
+  var saveButton     = document.getElementById('save');
+  var articleName    = null;
 
   function getInput(caption, callback) {
     inputField.setAttribute('placeholder', caption);
@@ -288,20 +342,49 @@ window.addEventListener('load', function() {
     inputField.addEventListener('keydown', handler);
   }
 
-  function notify(message) {
-    var noticeItem = createElement('LI');
+  function getListSelection(list, callback) {
+    // Be sure the list is empty before proceeding.
+    inputList.innerHTML = '';
+
+    for (var i = 0; i < list.length; ++i) {
+      addItemToList(inputList, list[i]);
+    }
+
+    showElement(listDialog);
+
+    var handler = function(e) {
+      try {
+        hideElement(listDialog);
+
+        var text = e.target.textContent;
+        callback(text);
+
+        // Clean up. (It's the OCD in me.)
+        inputList.innerHTML = '';
+
+      } finally {
+        listDialog.removeEventListener('click', handler);
+      }
+    };
+
+    listDialog.addEventListener('click', handler);
+  }
+
+  function notify(message, className, attributes) {
+    var noticeItem = createElement('LI', attributes);
+    noticeItem.className = className;
     noticeItem.textContent = message;
     notices.insertBefore(noticeItem, notices.firstChild);
 
     // Slide the notification in...
     doAfterDelay(0, function() {
-      noticeItem.className = 'appear';
+      addClass(noticeItem, 'appear');
 
       // ...leave it for 3 seconds...
       doAfterDelay(3000, function() {
 
         // ...then blast it off the screen!
-        noticeItem.removeAttribute('class');
+        removeClass(noticeItem, 'appear');
 
         // ...and remove it from the DOM (after blasting it).
         doAfterDelay(500, function() {
@@ -311,8 +394,42 @@ window.addEventListener('load', function() {
     });
   }
 
+  function startNewArticle() {
+    getInput('Enter a name for your new article', function(input) {
+      if (isEmpty(input)) {
+        notify('Name is required!', 'error');
+        return;
+      }
+
+      articleName = input;
+      article.innerHTML = '<h1 contenteditable="true">' + escapeHTML(input) + '</h1>';
+      updateNav();
+    });
+  }
+
+  function saveArticle(articleName) {
+    var articles = JSON.parse(localStorage.articles || '{}');
+    articles[articleName] = article.innerHTML;
+    localStorage.articles = JSON.stringify(articles);
+  }
+
+  function getSavedArticleNames() {
+    var articles = JSON.parse(localStorage.articles || '{}');
+    return Object.keys(articles);
+  }
+
+  function getArticle(articleName) {
+    var articles = JSON.parse(localStorage.articles || '{}');
+    return articles[articleName];
+  }
+
   function save() {
+    if (articleName) {
+      saveArticle(articleName);
+    }
+
     localStorage.article = article.innerHTML;
+
     pristine();
     notify('Saved!');
   }
@@ -329,6 +446,19 @@ window.addEventListener('load', function() {
     if (localStorage.article) {
       article.innerHTML = localStorage.article;
     }
+  }
+
+  function openArticle() {
+    getListSelection(getSavedArticleNames(), function(input) {
+      var savedArticle = getArticle(input);
+      if (!savedArticle) {
+        notify("Article doesn't exist!", 'error');
+        return;
+      }
+
+      articleName = input;
+      article.innerHTML = savedArticle;
+    });
   }
 
   function bind(callbacks) {
@@ -436,8 +566,28 @@ window.addEventListener('load', function() {
       switchTheme();
     }],
 
+    'ctrl+n': ['starts a new article', function() {
+      startNewArticle();
+    }],
+
+    'ctrl+o': ['opens a saved article', function() {
+      openArticle();
+    }],
+
     'ctrl+s': ['saves the article locally', function() {
       save();
+    }],
+
+    'ctrl+shift+s': ['saves a copy of the current article', function() {
+      getInput('Enter a new name for the article', function(input) {
+        if (isEmpty(input)) {
+          notify('Name is required!', 'error');
+          return;
+        }
+
+        articleName = input;
+        save();
+      });
     }],
 
     'ctrl+i': ['makes the selected text italic', function() {
@@ -486,6 +636,10 @@ window.addEventListener('load', function() {
 
   load();
   updateNav();
+});
+
+window.addEventListener('error', function(e) {
+  notify('Error: ' + e.message, 'error');
 });
 
 // Helpful stuff for local development
