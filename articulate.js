@@ -150,6 +150,25 @@ function contractArticle() {
   articleStyle.width = (width - 100) + 'px';
 }
 
+function switchTheme(theme) {
+  theme = theme || getNextTheme();
+  document.body.className = theme;
+  localStorage.theme = theme;
+}
+
+function getNextTheme() {
+  switch (document.body.className) {
+    case 'default':
+      return 'sky';
+
+    case 'sky':
+      return 'strict';
+
+    default:
+      return 'default';
+  }
+}
+
 // Utils
 function getMinMax(x, y) {
   return x < y ? [x, y] : [y, x];
@@ -217,6 +236,10 @@ window.addEventListener('load', function() {
 
     'ctrl+-': function() {
       contractArticle();
+    },
+
+    'ctrl+t': function() {
+      switchTheme();
     }
 
     // Let's not worry about these just yet.
@@ -235,6 +258,10 @@ window.addEventListener('load', function() {
       updateNav();
     }
   });
+
+  if (localStorage.theme) {
+    switchTheme(localStorage.theme);
+  }
 
   updateNav();
 });

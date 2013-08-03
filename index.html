@@ -5,18 +5,11 @@
     <title>Articulate</title>
 
     <style type="text/css">
-        @import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700|Source+Sans+Pro);
-
         html, body {
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
-        }
-
-        body {
-            background-color: #ddd;
-            font-family: "Source Sans Pro", sans-serif;
         }
 
         nav {
@@ -34,14 +27,6 @@
             text-decoration: none;
         }
 
-        nav ul li a:visited {
-            color: #00f;
-        }
-
-        nav ul li a:hover {
-            color: #48f;
-        }
-
         nav ul li.h1 a {
             font-size: 150%;
         }
@@ -57,50 +42,10 @@
 
         article {
             width: 960px;
-            background-color: #eee;
             margin: 0 auto;
             padding: 24pt 32pt;
             min-height: 100%;
             box-sizing: border-box;
-        }
-
-        h1 {
-            font-size: 48pt;
-            font-weight: 300;
-            min-height: 52pt;
-            border-bottom: 1px solid black;
-        }
-
-        h2 {
-            font-size: 40pt;
-            min-height: 42pt;
-            border-left: 8px solid #888;
-            padding-left: 16px;
-        }
-
-        h3 {
-            color: #444;
-            font-size: 32pt;
-            font-weight: bold;
-            min-height: 34pt;
-            border-left: 8px solid #bbb;
-            padding-left: 16px;
-        }
-
-        p {
-            min-height: 20px;
-        }
-
-        a {
-            cursor: pointer;
-        }
-
-        article *:hover {
-            background-color: #def;
-        }
-
-        article *:focus {
-            background-color: #ffe;
         }
 
         #selection {
@@ -112,12 +57,15 @@
         }
     </style>
 
+    <link rel="stylesheet" type="text/css" href="theme/default.css" />
+    <link rel="stylesheet" type="text/css" href="theme/sky.css" />
+    <link rel="stylesheet" type="text/css" href="theme/strict.css" />
     <script src="mousetrap.js"></script>
     <script src="mousetrap-global-bind.js"></script>
     <script src="articulate.js"></script>
 </head>
 
-<body>
+<body class="default">
     <nav>
         <ul></ul>
     </nav>
