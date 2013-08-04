@@ -105,6 +105,10 @@ function moveAfterList(element) {
 }
 
 function changeElementTo(oldElement, name, attributes) {
+  if (!isEditing()) {
+    return;
+  }
+
   if (name === 'LI') {
     ensureListExists(oldElement);
   } else {
@@ -171,6 +175,10 @@ function getTotalOffset(element) {
 }
 
 function insertNewElement(name, oldElement) {
+  if (!isEditing()) {
+    return;
+  }
+
   oldElement = oldElement || getCurrentElement();
   var newElement = createElement(name, { contenteditable: true });
   oldElement.parentNode.insertBefore(newElement, oldElement.nextSibling);
@@ -601,6 +609,10 @@ window.addEventListener('load', function() {
       var currentElement = getCurrentElement();
       if (currentElement) {
         currentElement.blur();
+
+        if (isEmpty(currentElement.textContent)) {
+          removeElement(currentElement);
+        }
       }
     }],
 
