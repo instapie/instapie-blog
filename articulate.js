@@ -157,6 +157,10 @@ function changeCurrentSelectionTo(name, attributes) {
 function getRange(selection) {
   var range = getMinMax(selection.anchorOffset, selection.focusOffset);
 
+  // Expand range as necessary in case what's selected includes HTML entities.
+  var length = escapeHTML(selection.anchorNode.textContent.substring(range[0], range[1])).length;
+  range[1] = range[0] + length;
+
   // Adjust offsets based on where the current selection is within the parent.
   var offset = getTotalOffset(selection.anchorNode);
   range[0] += offset;
@@ -169,7 +173,7 @@ function getTotalOffset(element) {
   var offset = 0;
   while (element && element.previousSibling) {
     element = element.previousSibling;
-    offset += (element.outerHTML || element.textContent).length;
+    offset += (element.outerHTML || escapeHTML(element.textContent)).length;
   }
   return offset;
 }
@@ -301,13 +305,19 @@ function getMinMax(x, y) {
   return x < y ? [x, y] : [y, x];
 }
 
-// Thank you, StackOverflow :)
-// http://stackoverflow.com/questions/5251520/how-do-i-escape-some-html-in-javascript
 function escapeHTML(html) {
-  var pre = createElement('pre');
-  var text = document.createTextNode(html);
-  pre.appendChild(text);
-  return pre.innerHTML;
+  // Here's the StackOverflow implementation:
+  // http://stackoverflow.com/questions/5251520/how-do-i-escape-some-html-in-javascript
+
+  // var pre = createElement('pre');
+  // var text = document.createTextNode(html);
+  // pre.appendChild(text);
+  // return pre.innerHTML;
+
+  // I'm going to go with something more lightweight (?), though.
+  return html.replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 // I just hate how period is the second argument to setInterval.
