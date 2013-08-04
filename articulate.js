@@ -535,6 +535,11 @@ window.addEventListener('load', function() {
     notify('Saved!');
   }
 
+  function loadArticle(savedArticle) {
+    article.innerHTML = savedArticle;
+    updateNav();
+  }
+
   function load() {
     if (!localStorage) {
       return;
@@ -545,7 +550,7 @@ window.addEventListener('load', function() {
     }
 
     if (localStorage.article) {
-      article.innerHTML = localStorage.article;
+      loadArticle(localStorage.article);
     }
   }
 
@@ -558,7 +563,7 @@ window.addEventListener('load', function() {
       }
 
       articleName = input;
-      article.innerHTML = savedArticle;
+      loadArticle(savedArticle);
     });
   }
 
@@ -707,6 +712,10 @@ window.addEventListener('load', function() {
       changeCurrentSelectionTo('STRONG');
     }],
 
+    'ctrl+`': ['marks the selected text as source code (<code>)', function() {
+      changeCurrentSelectionTo('CODE');
+    }],
+
     'ctrl+r': ['add a reference/hyperlink (<a>)', function() {
       var selection = window.getSelection();
       var anchorNode = selection.anchorNode;
@@ -743,25 +752,29 @@ window.addEventListener('load', function() {
     save();
   });
 
-  load();
-  updateNav();
-});
+  document.addEventListener('click', function(e) {
 
-window.addEventListener('error', function(e) {
-  var message = e.message;
-  if (e.lineNumber) {
-    message += ': ' + e.lineNumber;
-  }
-
-  notify(message, 'error');
-});
-
-// Helpful stuff for local development
-if (inDevMode()) {
-  doPeriodically(500, function() {
-    var selection = window.getSelection();
-    document.getElementById('anchor-offset').textContent = selection.anchorOffset;
-    document.getElementById('focus-offset').textContent = selection.focusOffset;
-    document.getElementById('total-offset').textContent = getTotalOffset(selection.anchorNode);
   });
-}
+
+  window.addEventListener('error', function(e) {
+    var message = e.message;
+    if (e.lineNumber) {
+      message += ': ' + e.lineNumber;
+    }
+
+    notify(message, 'error');
+  });
+
+  // Load any work-in-progress the user saved locally.
+  load();
+
+  // Helpful stuff for local development
+  if (inDevMode()) {
+    doPeriodically(500, function() {
+      var selection = window.getSelection();
+      document.getElementById('anchor-offset').textContent = selection.anchorOffset;
+      document.getElementById('focus-offset').textContent = selection.focusOffset;
+      document.getElementById('total-offset').textContent = getTotalOffset(selection.anchorNode);
+    });
+  }
+});
