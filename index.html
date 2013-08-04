@@ -145,6 +145,41 @@
             font-size: 24pt;
         }
 
+        #modal-blob {
+            position: fixed;
+            top: 20%;
+            bottom: 20%;
+            left: 10%;
+            right: 10%;
+            color: #fff;
+            z-index: 1;
+        }
+
+        #modal-blob:before {
+            display: block;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            content: "";
+            background: #000;
+            opacity: 0.5;
+            filter: alpha(opacity=50);
+            z-index: -1;
+        }
+
+        #modal-blob textarea {
+            display: block;
+            position: absolute;
+            top: 10%;
+            bottom: 10%;
+            left: 10%;
+            right: 10%;
+            background-color: #fff;
+            font-size: 24pt;
+        }
+
         #modal-list {
             position: fixed;
             top: 50%;
@@ -254,10 +289,16 @@
 
     <div id="toolbar">
         <button id="save">Save</button>
+        <button id="export">Export</button>
+        <button id="import">Import</button>
     </div>
 
     <div id="modal-input" class="autohide">
         <input type="text" />
+    </div>
+
+    <div id="modal-blob" class="autohide">
+        <textarea></textarea>
     </div>
 
     <div id="modal-list" class="autohide">

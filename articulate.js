@@ -378,15 +378,23 @@ window.addEventListener('load', function() {
   var shortcutsTable = document.querySelector('#shortcuts table');
   var inputDialog    = document.getElementById('modal-input');
   var inputField     = inputDialog.querySelector('input');
+  var blobDialog     = document.getElementById('modal-blob');
+  var blobField      = blobDialog.querySelector('textarea');
   var listDialog     = document.getElementById('modal-list');
   var inputList      = listDialog.querySelector('ul');
   var saveButton     = document.getElementById('save');
+  var exportButton   = document.getElementById('export');
+  var importButton   = document.getElementById('import');
+
+  // For the record, I do consider it kind of crazy that I'm just using a local
+  // variable to store the current article name. Doesn't seem very robust. Will
+  // ponder this later.
   var articleName    = null;
 
-  function getInput(caption, callback) {
-    inputField.setAttribute('placeholder', caption);
-    showElement(inputDialog);
-    focus(inputField);
+  function getInputFromDialog(dialog, field, caption, callback) {
+    field.setAttribute('placeholder', caption);
+    showElement(dialog);
+    focus(field);
 
     var handler = function(e) {
       if (e.keyCode === 13) {
@@ -394,21 +402,29 @@ window.addEventListener('load', function() {
         e.stopPropagation();
 
         try {
-          hideElement(inputDialog);
+          hideElement(dialog);
 
-          callback(inputField.value);
+          callback(field.value);
 
           // Clean up.
-          inputField.removeAttribute('placeholder');
-          inputField.value = '';
+          field.removeAttribute('placeholder');
+          field.value = '';
 
         } finally {
-          inputField.removeEventListener('keydown', handler);
+          field.removeEventListener('keydown', handler);
         }
       }
     };
 
-    inputField.addEventListener('keydown', handler);
+    field.addEventListener('keydown', handler);
+  }
+
+  function getInput(caption, callback) {
+    getInputFromDialog(inputDialog, inputField, caption, callback);
+  }
+
+  function getBlob(caption, callback) {
+    getInputFromDialog(blobDialog, blobField, caption, callback);
   }
 
   function getListSelection(list, callback) {
@@ -762,8 +778,17 @@ window.addEventListener('load', function() {
     save();
   });
 
-  document.addEventListener('click', function(e) {
+  exportButton.addEventListener('click', function() {
+    showElement(blobDialog);
+    blobField.value = article.innerHTML;
+    focus(blobField);
+    blobField.select();
+  });
 
+  importButton.addEventListener('click', function() {
+    getBlob('Paste some HTML here.', function(input) {
+      article.innerHTML = input;
+    });
   });
 
   window.addEventListener('error', function(e) {
