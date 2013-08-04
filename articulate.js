@@ -788,6 +788,8 @@ window.addEventListener('load', function() {
   importButton.addEventListener('click', function() {
     getBlob('Paste some HTML here.', function(input) {
       article.innerHTML = input;
+      updateNav();
+      dirty();
     });
   });
 
