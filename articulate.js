@@ -1,6 +1,6 @@
 function getContainerElement(node) {
   var element = node;
-  while (element.nodeType !== 1) {
+  while (element && element.nodeType !== 1) {
     element = element.parentNode;
   }
   return element;
@@ -23,6 +23,13 @@ function dirty() {
 
 function pristine() {
   document.getElementById('save').textContent = 'Save';
+}
+
+function blurCurrentElement() {
+  var currentElement = getCurrentElement();
+  if (currentElement) {
+    currentElement.blur();
+  }
 }
 
 function addClass(element, className) {
@@ -394,9 +401,15 @@ window.addEventListener('load', function() {
       addItemToList(inputList, list[i]);
     }
 
+    blurCurrentElement();
     showElement(listDialog);
+    focus(listDialog);
 
     var clickHandler = function(e) {
+      if (!e.target || e.target.nodeName !== 'LI') {
+        return;
+      }
+
       try {
         hideElement(listDialog);
 
@@ -407,12 +420,43 @@ window.addEventListener('load', function() {
         inputList.innerHTML = '';
 
       } finally {
-        Mousetrap.unbind(['up', 'down', 'enter']);
+        Mousetrap.unbind(['up', 'down']);
         listDialog.removeEventListener('click', clickHandler);
+        document.removeEventListener('keydown', enterHandler);
       }
     };
 
     listDialog.addEventListener('click', clickHandler);
+
+    // It seems adding this handler manually is necessary since Mousetrap only
+    // lets you bind/unbind one handler per combo.
+    var enterHandler = function(e) {
+      if (e.keyCode === 13) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        var selectedItem = inputList.querySelector('li.selected');
+
+        if (!selectedItem) {
+          return;
+        }
+
+        try {
+          hideElement(listDialog);
+
+          callback(selectedItem.textContent);
+
+          inputList.innerHTML = '';
+
+        } finally {
+          Mousetrap.unbind(['up', 'down']);
+          listDialog.removeEventListener('click', clickHandler);
+          document.removeEventListener('keydown', enterHandler);
+        }
+      }
+    };
+
+    document.addEventListener('keydown', enterHandler);
 
     bind(false, {
       'up': [function() {
@@ -439,26 +483,6 @@ window.addEventListener('load', function() {
 
         removeClass(selectedItem, 'selected');
         addClass(selectedItem.nextSibling || inputList.firstChild, 'selected');
-      }],
-
-      'enter': [function() {
-        var selectedItem = inputList.querySelector('li.selected');
-
-        if (!selectedItem) {
-          return;
-        }
-
-        try {
-          hideElement(listDialog);
-
-          callback(selectedItem.textContent);
-
-          inputList.innerHTML = '';
-
-        } finally {
-          Mousetrap.unbind(['up', 'down', 'enter']);
-          listDialog.removeEventListener('click', clickHandler);
-        }
       }]
     });
   }
@@ -712,7 +736,12 @@ window.addEventListener('load', function() {
 });
 
 window.addEventListener('error', function(e) {
-  notify('Error: ' + e.message, 'error');
+  var message = e.message;
+  if (e.lineNumber) {
+    message += ': ' + e.lineNumber;
+  }
+
+  notify(message, 'error');
 });
 
 // Helpful stuff for local development
