@@ -420,6 +420,11 @@ function removeFromArray(array, element) {
 function isEditing() {
   var element = getCurrentElement();
 
+  // If no element is selected then obviously we're not editing.
+  if (!element) {
+    return false;
+  }
+
   // Special case -- don't treat focus on the article *itself* as editing.
   if (element.nodeName === 'ARTICLE') {
     return false;
