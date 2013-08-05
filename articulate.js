@@ -904,8 +904,8 @@ window.addEventListener('load', function() {
 
   window.addEventListener('error', function(e) {
     var message = e.message;
-    if (e.lineNumber) {
-      message += ': ' + e.lineNumber;
+    if (e.lineNumber || e.lineno) {
+      message += ': ' + (e.lineNumber || e.lineno);
     }
 
     notify(message, 'error');
