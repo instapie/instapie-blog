@@ -1009,7 +1009,7 @@ window.addEventListener('load', function() {
   deleteButton.addEventListener('click', function() {
     var articleName = localStorage.lastArticleName;
 
-    if (!articleName) {
+    if (typeof articleName === 'undefined') {
       return;
     }
 
