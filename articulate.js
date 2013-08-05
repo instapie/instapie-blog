@@ -883,6 +883,10 @@ window.addEventListener('load', function() {
       changeCurrentSelectionTo('KBD');
     }],
 
+    'ctrl+backspace': ['marks the selected text as deleted', function() {
+      changeCurrentSelectionTo('DEL');
+    }],
+
     'ctrl+a': ['add a hyperlink (<a>)', function(e) {
       if (isInCodeEditor(e)) {
         return;
@@ -1011,6 +1015,11 @@ window.addEventListener('load', function() {
       deleteArticle(articleName);
       articleName = null;
     });
+  });
+
+  // If the user clicks below the last element, start a new paragraph?
+  article.addEventListener('click', function(e) {
+    // TODO: Implement me :)
   });
 
   window.addEventListener('error', function(e) {
