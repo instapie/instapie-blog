@@ -87,6 +87,7 @@ article kbd {
   -moz-border-radius: 3px;
   -webkit-border-radius: 3px;
 
+  line-height: 1.8;
   text-shadow: 0 1px 0 #fff;
   white-space: nowrap;
 }
