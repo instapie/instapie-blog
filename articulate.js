@@ -16,13 +16,17 @@ function getCurrentElement() {
 
 function getPreviousElement(element) {
   var previousElement = element.previousSibling;
-  while (previousElement.nodeType !== 1) {
+  while (previousElement && previousElement.nodeType !== 1) {
     previousElement = previousElement.previousSibling;
   }
   return previousElement;
 }
 
 function focus(element) {
+  if (!element) {
+    return;
+  }
+
   doAfterDelay(0, function() {
     element.focus();
   });
@@ -348,24 +352,17 @@ function notify(message, className, attributes) {
   doAfterDelay(0, function() {
     addClass(noticeItem, 'appear');
 
-    if (className === 'error') {
-      noticeItem.addEventListener('click', function() {
+    // ...leave it for 3 seconds...
+    doAfterDelay(3000, function() {
+
+      // ...then blast it off the screen!
+      removeClass(noticeItem, 'appear');
+
+      // ...and remove it from the DOM (after blasting it).
+      doAfterDelay(500, function() {
         notices.removeChild(noticeItem);
       });
-
-    } else {
-      // ...leave it for 3 seconds...
-      doAfterDelay(3000, function() {
-
-        // ...then blast it off the screen!
-        removeClass(noticeItem, 'appear');
-
-        // ...and remove it from the DOM (after blasting it).
-        doAfterDelay(500, function() {
-          notices.removeChild(noticeItem);
-        });
-      })
-    }
+    })
   });
 }
 

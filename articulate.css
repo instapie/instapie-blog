@@ -10,7 +10,6 @@ nav {
   top: 0;
   left: 0;
   padding: 12px;
-  z-index: -1;
 }
 
 nav ul {
@@ -32,6 +31,12 @@ nav ul li.h2 a {
 
 nav ul li.h3 a {
   padding-left: 24px;
+}
+
+@media all and (min-width: 1200px) {
+  article {
+    font-size: 16pt;
+  }
 }
 
 article {
