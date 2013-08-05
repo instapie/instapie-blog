@@ -679,7 +679,7 @@ window.addEventListener('load', function() {
     var editor = editors[editorId];
     var textarea = wrapper.previousSibling;
     var pre = createElement('PRE', {
-      'data-mode': editor.getDoc().getMode()
+      'data-mode': editor.getOption('mode')
     });
     pre.textContent = editor.getValue();
 
