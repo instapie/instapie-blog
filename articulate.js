@@ -29,10 +29,16 @@ function focus(element) {
 }
 
 function dirty() {
+  if (!document.title.match(/\*$/)) {
+    document.title += '*';
+  }
   document.getElementById('save').textContent = 'Save*';
 }
 
 function pristine() {
+  if (document.title.match(/\*$/)) {
+    document.title = document.title.substring(0, document.title.length - 1);
+  }
   document.getElementById('save').textContent = 'Save';
 }
 
@@ -158,7 +164,7 @@ function changeElementToEditor(element, mode) {
   textarea.value = element.textContent;
   element.parentNode.replaceChild(textarea, element);
 
-  initializeEditor(textarea);
+  initializeEditor(textarea, mode);
 
   dirty();
 }
@@ -259,7 +265,7 @@ function initializeEditors() {
 
   var pres = document.querySelectorAll('article > pre');
   for (var i = 0; i < pres.length; ++i) {
-    initializeEditor(pres[i]);
+    initializeEditor(pres[i], pres[i].getAttribute('data-mode'));
   }
 }
 
@@ -439,6 +445,10 @@ function isInCodeEditor(e) {
   return belongsTo(e.target, 'CodeMirror');
 }
 
+function isModalShowing() {
+  return !!document.querySelector('.autohide.visible');
+}
+
 function getAvailableModes() {
   var modes = Object.keys(CodeMirror.modes);
   for (var i = modes.length - 1; i >= 0; --i) {
@@ -480,13 +490,9 @@ window.addEventListener('load', function() {
   var listCaption    = listDialog.querySelector('h1');
   var inputList      = listDialog.querySelector('ul');
   var saveButton     = document.getElementById('save');
+  var deleteButton   = document.getElementById('delete');
   var exportButton   = document.getElementById('export');
   var importButton   = document.getElementById('import');
-
-  // For the record, I do consider it kind of crazy that I'm just using a local
-  // variable to store the current article name. Doesn't seem very robust. Will
-  // ponder this later.
-  var articleName    = null;
 
   function getInputFromDialog(dialog, field, caption, callback) {
     field.setAttribute('placeholder', caption);
@@ -621,6 +627,14 @@ window.addEventListener('load', function() {
     });
   }
 
+  function getConfirmation(caption, callback) {
+    getListSelection(caption, ['Yes', 'No'], function(input) {
+      if (input === 'Yes') {
+        callback();
+      }
+    });
+  }
+
   function startNewArticle() {
     getInput('Enter a name for your new article', function(input) {
       if (isEmpty(input)) {
@@ -628,7 +642,7 @@ window.addEventListener('load', function() {
         return;
       }
 
-      articleName = input;
+      localStorage.lastArticleName = input;
       article.innerHTML = '<h1 contenteditable="true">' + escapeHTML(input) + '</h1>';
       updateNav();
     });
@@ -653,6 +667,13 @@ window.addEventListener('load', function() {
     return clone.innerHTML;
   }
 
+  function deleteArticle(articleName) {
+    var articles = JSON.parse(localStorage.articles || '{}');
+    delete articles[articleName];
+    localStorage.articles = JSON.stringify(articles);
+    notify('"' + articleName + '" deleted!');
+  }
+
   function replaceEditor(wrapper) {
     var editorId = wrapper.getAttribute('data-editor-id');
     var editor = editors[editorId];
@@ -671,28 +692,42 @@ window.addEventListener('load', function() {
     var articles = JSON.parse(localStorage.articles || '{}');
     articles[articleName] = getArticleHtml();
     localStorage.articles = JSON.stringify(articles);
+    localStorage.lastArticleName = articleName;
 
     pristine();
     notify('Saved!');
   }
 
   function save() {
-    if (articleName) {
-      saveArticle(articleName);
+    var lastArticleName = localStorage.lastArticleName;
+
+    if (lastArticleName) {
+      saveArticle(lastArticleName);
       return;
     }
 
     getInput('Enter a name for this article', function(input) {
-      articleName = input;
       saveArticle(input);
       return;
     });
   }
 
-  function loadArticle(savedArticle) {
+  function importArticle(savedArticle) {
     article.innerHTML = savedArticle;
     updateNav();
     initializeEditors();
+  }
+
+  function loadArticle(articleName) {
+    var savedArticle = getArticle(articleName);
+    if (!savedArticle) {
+      notify("Article doesn't exist!", 'error');
+      return;
+    }
+
+    importArticle(savedArticle);
+    document.title = articleName;
+    localStorage.lastArticleName = articleName;
   }
 
   function load() {
@@ -704,19 +739,17 @@ window.addEventListener('load', function() {
       switchTheme(localStorage.theme);
     }
 
-    updateNav();
+    var lastArticleName = localStorage.lastArticleName;
+    if (lastArticleName) {
+      loadArticle(lastArticleName);
+    } else {
+      updateNav();
+    }
   }
 
   function openArticle() {
     getListSelection('Select an article', getSavedArticleNames(), function(input) {
-      var savedArticle = getArticle(input);
-      if (!savedArticle) {
-        notify("Article doesn't exist!", 'error');
-        return;
-      }
-
-      articleName = input;
-      loadArticle(savedArticle);
+      loadArticle(input);
     });
   }
 
@@ -728,7 +761,7 @@ window.addEventListener('load', function() {
         var force       = args.pop();
 
         Mousetrap[applyGlobally ? 'bindGlobal' : 'bind'](sequence, function(e) {
-          if (!force && !isEditing()) {
+          if (applyGlobally && !force && !isEditing()) {
             return;
           }
 
@@ -763,29 +796,13 @@ window.addEventListener('load', function() {
   }
 
   bind(true, {
-    'esc': [function() {
-      var autohideElements = document.querySelectorAll('.autohide');
-      for (var i = 0; i < autohideElements.length; ++i) {
-        hideElement(autohideElements[i]);
-      }
-
-      var currentElement = getCurrentElement();
-      if (currentElement) {
-        currentElement.blur();
-
-        if (isEmpty(currentElement.textContent)) {
-          removeElement(currentElement);
-        }
-      }
-    }],
-
     'ctrl+enter': ['inserts a new element before the current one', function(e) {
       var currentElement = getCurrentElement();
       insertNewElement(currentElement.nodeName, currentElement.previousSibling);
     }],
 
     'enter': ['creates a new element', function(e) {
-      if (isInCodeEditor(e)) {
+      if (isInCodeEditor(e) || isModalShowing()) {
         return;
       }
 
@@ -850,6 +867,10 @@ window.addEventListener('load', function() {
       changeCurrentSelectionTo('CODE');
     }],
 
+    'ctrl+k': ['marks the selected text as a keyboard key (<kbd>)', function() {
+      changeCurrentSelectionTo('KBD');
+    }],
+
     'ctrl+a': ['add a hyperlink (<a>)', function(e) {
       if (isInCodeEditor(e)) {
         return;
@@ -870,6 +891,22 @@ window.addEventListener('load', function() {
       getInput('Enter the URL of an image', function(src) {
         changeElementTo(element, 'IMG', { src: src });
       });
+    }],
+
+    'esc': [true, null, function() {
+      var autohideElements = document.querySelectorAll('.autohide');
+      for (var i = 0; i < autohideElements.length; ++i) {
+        hideElement(autohideElements[i]);
+      }
+
+      var currentElement = getCurrentElement();
+      if (currentElement) {
+        currentElement.blur();
+
+        if (isEmpty(currentElement.textContent)) {
+          removeElement(currentElement);
+        }
+      }
     }],
 
     'ctrl+=': [true, 'increases the width of the article', function() {
@@ -926,6 +963,18 @@ window.addEventListener('load', function() {
     save();
   });
 
+  // Allow the user to delete the current work.
+  deleteButton.addEventListener('click', function() {
+    if (!articleName) {
+      return;
+    }
+
+    getConfirmation('Really delete "' + articleName + '"?', function() {
+      deleteArticle(articleName);
+      articleName = null;
+    });
+  });
+
   exportButton.addEventListener('click', function() {
     showElement(blobDialog);
     blobField.value = getArticleHtml();
@@ -935,7 +984,7 @@ window.addEventListener('load', function() {
 
   importButton.addEventListener('click', function() {
     getBlob('Paste some HTML here.', function(input) {
-      loadArticle(input);
+      importArticle(input);
       dirty();
     });
   });
