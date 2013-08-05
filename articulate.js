@@ -906,9 +906,16 @@ window.addEventListener('load', function() {
     }],
 
     'esc': [true, null, function() {
-      var autohideElements = document.querySelectorAll('.autohide');
-      for (var i = 0; i < autohideElements.length; ++i) {
-        hideElement(autohideElements[i]);
+      var autohideElements = document.querySelectorAll('.autohide.visible');
+      if (autohideElements.length > 0) {
+        for (var i = 0; i < autohideElements.length; ++i) {
+          hideElement(autohideElements[i]);
+        }
+        return;
+      }
+
+      if (!isEditing()) {
+        return;
       }
 
       var currentElement = getCurrentElement();
