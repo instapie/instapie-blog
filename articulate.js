@@ -1007,6 +1007,8 @@ window.addEventListener('load', function() {
 
   // Allow the user to delete the current work.
   deleteButton.addEventListener('click', function() {
+    var articleName = localStorage.lastArticleName;
+
     if (!articleName) {
       return;
     }
