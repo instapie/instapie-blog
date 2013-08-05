@@ -130,7 +130,7 @@ function changeElementTo(oldElement, name, attributes) {
 
   var newElement = createElement(name, attributes);
   newElement.setAttribute('contenteditable', true);
-  setElementText(newElement, oldElement.textContent || oldElement.value);
+  setElementText(newElement, oldElement.textContent || oldElement.value || '');
   oldElement.parentNode.replaceChild(newElement, oldElement);
   focus(newElement);
 
