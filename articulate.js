@@ -973,8 +973,10 @@ window.addEventListener('load', function() {
   });
 
   exportButton.addEventListener('click', function() {
-    Docked.save(getArticleHtml(), function(response) {
-      alert('Saved article - ID: ' + response.id);
+    getInput('Enter a title', function(title) {
+      Docked.save({ title: title, content: getArticleHtml() }, function(response) {
+        alert('Saved article - ID: ' + response.id);
+      });
     });
   });
 
@@ -982,6 +984,7 @@ window.addEventListener('load', function() {
     getInput('Enter a document ID', function(id) {
       Docked.open(id, function(response) {
         importArticle(response.content);
+        document.title = response.title;
         notify('Imported article ' + id + '!');
       });
     });
