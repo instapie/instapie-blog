@@ -116,10 +116,6 @@ function moveAfterList(element) {
 }
 
 function changeElementTo(oldElement, name, attributes) {
-  if (!isEditing()) {
-    return;
-  }
-
   if (name === 'LI') {
     ensureListExists(oldElement);
   } else {
@@ -128,7 +124,7 @@ function changeElementTo(oldElement, name, attributes) {
 
   var newElement = createElement(name, attributes);
   newElement.setAttribute('contenteditable', true);
-  newElement.textContent = oldElement.textContent;
+  setElementText(newElement, oldElement.textContent || oldElement.value);
   oldElement.parentNode.replaceChild(newElement, oldElement);
   focus(newElement);
 
@@ -137,26 +133,38 @@ function changeElementTo(oldElement, name, attributes) {
   }
 
   dirty();
+
+  return newElement;
+}
+
+function setElementText(element, text) {
+  switch (element.nodeName) {
+    case 'TEXTAREA':
+      element.value = text;
+      break;
+
+    default:
+      element.textContent = text;
+      break;
+  }
 }
 
 function changeCurrentElementTo(name, attributes) {
   changeElementTo(getCurrentElement(), name, attributes);
 }
 
-function changeCurrentElementToEditor(mode) {
-  if (!isEditing()) {
-    return;
-  }
-
-  var currentElement = getCurrentElement();
-
+function changeElementToEditor(element, mode) {
   var textarea = createElement('textarea');
-  textarea.value = currentElement.textContent;
-  currentElement.parentNode.replaceChild(textarea, currentElement);
+  textarea.value = element.textContent;
+  element.parentNode.replaceChild(textarea, element);
 
   initializeEditor(textarea);
 
   dirty();
+}
+
+function changeCurrentElementToEditor(mode) {
+  changeElementToEditor(getCurrentElement(), mode);
 }
 
 function changeSelectionTo(element, range, name, attributes) {
@@ -206,10 +214,6 @@ function getTotalOffset(element) {
 }
 
 function insertNewElement(name, oldElement) {
-  if (!isEditing()) {
-    return;
-  }
-
   oldElement = oldElement || getCurrentElement();
   var newElement = createElement(name, { contenteditable: true });
   oldElement.parentNode.insertBefore(newElement, oldElement.nextSibling);
@@ -250,13 +254,20 @@ function updateNav() {
 }
 
 function initializeEditors() {
-  var textareas = document.querySelectorAll('article > textarea');
-  for (var i = 0; i < textareas.length; ++i) {
-    initializeEditor(textareas[i]);
+  editors = {};
+  idCounter = 1;
+
+  var pres = document.querySelectorAll('article > pre');
+  for (var i = 0; i < pres.length; ++i) {
+    initializeEditor(pres[i]);
   }
 }
 
 function initializeEditor(textarea, mode) {
+  if (textarea.nodeName !== 'TEXTAREA') {
+    textarea = changeElementTo(textarea, 'TEXTAREA');
+  }
+
   var editor = CodeMirror.fromTextArea(textarea, {
     autofocus: true,
     mode: mode,
@@ -331,17 +342,24 @@ function notify(message, className, attributes) {
   doAfterDelay(0, function() {
     addClass(noticeItem, 'appear');
 
-    // ...leave it for 3 seconds...
-    doAfterDelay(3000, function() {
-
-      // ...then blast it off the screen!
-      removeClass(noticeItem, 'appear');
-
-      // ...and remove it from the DOM (after blasting it).
-      doAfterDelay(500, function() {
+    if (className === 'error') {
+      noticeItem.addEventListener('click', function() {
         notices.removeChild(noticeItem);
       });
-    })
+
+    } else {
+      // ...leave it for 3 seconds...
+      doAfterDelay(3000, function() {
+
+        // ...then blast it off the screen!
+        removeClass(noticeItem, 'appear');
+
+        // ...and remove it from the DOM (after blasting it).
+        doAfterDelay(500, function() {
+          notices.removeChild(noticeItem);
+        });
+      })
+    }
   });
 }
 
@@ -419,6 +437,17 @@ function isInCodeEditor(e) {
   }
 
   return belongsTo(e.target, 'CodeMirror');
+}
+
+function getAvailableModes() {
+  var modes = Object.keys(CodeMirror.modes);
+  for (var i = modes.length - 1; i >= 0; --i) {
+    if (modes[i] === 'null') {
+      modes.splice(i, 1);
+      break;
+    }
+  }
+  return modes;
 }
 
 function belongsTo(element, parentClass) {
@@ -619,19 +648,23 @@ window.addEventListener('load', function() {
     var clone = article.cloneNode(true);
     var existingEditors = clone.querySelectorAll('.CodeMirror');
     for (var i = 0; i < existingEditors.length; ++i) {
-      removeEditor(existingEditors[i]);
+      replaceEditor(existingEditors[i]);
     }
     return clone.innerHTML;
   }
 
-  function removeEditor(wrapper) {
+  function replaceEditor(wrapper) {
     var editorId = wrapper.getAttribute('data-editor-id');
     var editor = editors[editorId];
     var textarea = wrapper.previousSibling;
-    textarea.value = editor.getValue();
-    textarea.setAttribute('data-mode', editor.getOption('mode'));
-    wrapper.parentNode.removeChild(wrapper);
-    delete editors[editorId];
+    var pre = createElement('PRE', {
+      'data-mode': editor.getDoc().getMode()
+    });
+    pre.textContent = editor.getValue();
+
+    var parent = wrapper.parentNode;
+    parent.replaceChild(pre, wrapper);
+    parent.removeChild(textarea);
   }
 
   function saveArticle(articleName) {
@@ -689,16 +722,21 @@ window.addEventListener('load', function() {
 
   function bind(applyGlobally, callbacks) {
     for (var sequence in callbacks) {
-      (function(descriptionAndCallback) {
-        var callback    = descriptionAndCallback.pop();
-        var description = descriptionAndCallback.pop();
+      (function(args) {
+        var callback    = args.pop();
+        var description = args.pop();
+        var force       = args.pop();
 
         Mousetrap[applyGlobally ? 'bindGlobal' : 'bind'](sequence, function(e) {
-          var cancel = true;
+          if (!force && !isEditing()) {
+            return;
+          }
+
           try {
-            cancel = !callback.apply(this, arguments);
+            callback.apply(this, arguments);
+
           } finally {
-            if (cancel) {
+            if (!e.keepDefault) {
               e.preventDefault();
             }
           }
@@ -747,10 +785,6 @@ window.addEventListener('load', function() {
     }],
 
     'enter': ['creates a new element', function(e) {
-      if (!isEditing()) {
-        return;
-      }
-
       if (isInCodeEditor(e)) {
         return;
       }
@@ -770,7 +804,7 @@ window.addEventListener('load', function() {
         return;
       }
 
-      return true;
+      e.keepDefault = true;
     }],
 
     'ctrl+1': ['changes the current element to a top-level heading (<h1>)', function() {
@@ -798,44 +832,9 @@ window.addEventListener('load', function() {
     }],
 
     'ctrl+m': ['creates a code editor from the current element', function() {
-      getListSelection('Select a language mode', Object.keys(CodeMirror.modes), function(mode) {
-        changeCurrentElementToEditor(mode);
-      });
-    }],
-
-    'ctrl+=': ['increases the width of the article', function() {
-      expandArticle();
-    }],
-
-    'ctrl+-': ['decreases the width of the article', function() {
-      contractArticle();
-    }],
-
-    'ctrl+t': ['switches the current theme', function() {
-      switchTheme();
-    }],
-
-    'ctrl+n': ['starts a new article', function() {
-      startNewArticle();
-    }],
-
-    'ctrl+o': ['opens a saved article', function() {
-      openArticle();
-    }],
-
-    'ctrl+s': ['saves the article locally', function() {
-      save();
-    }],
-
-    'ctrl+shift+s': ['saves a copy of the current article', function() {
-      getInput('Enter a new name for the article', function(input) {
-        if (isEmpty(input)) {
-          notify('Name is required!', 'error');
-          return;
-        }
-
-        articleName = input;
-        save();
+      var currentElement = getCurrentElement();
+      getListSelection('Select a language mode', getAvailableModes(), function(mode) {
+        changeElementToEditor(currentElement, mode);
       });
     }],
 
@@ -851,7 +850,11 @@ window.addEventListener('load', function() {
       changeCurrentSelectionTo('CODE');
     }],
 
-    'ctrl+r': ['add a reference/hyperlink (<a>)', function() {
+    'ctrl+a': ['add a hyperlink (<a>)', function(e) {
+      if (isInCodeEditor(e)) {
+        return;
+      }
+
       var selection = window.getSelection();
       var anchorNode = selection.anchorNode;
       var range = getRange(selection);
@@ -866,6 +869,42 @@ window.addEventListener('load', function() {
 
       getInput('Enter the URL of an image', function(src) {
         changeElementTo(element, 'IMG', { src: src });
+      });
+    }],
+
+    'ctrl+=': [true, 'increases the width of the article', function() {
+      expandArticle();
+    }],
+
+    'ctrl+-': [true, 'decreases the width of the article', function() {
+      contractArticle();
+    }],
+
+    'ctrl+t': [true, 'switches the current theme', function() {
+      switchTheme();
+    }],
+
+    'ctrl+n': [true, 'starts a new article', function() {
+      startNewArticle();
+    }],
+
+    'ctrl+o': [true, 'opens a saved article', function() {
+      openArticle();
+    }],
+
+    'ctrl+s': [true, 'saves the article locally', function() {
+      save();
+    }],
+
+    'ctrl+shift+s': [true, 'saves a copy of the current article', function() {
+      getInput('Enter a new name for the article', function(input) {
+        if (isEmpty(input)) {
+          notify('Name is required!', 'error');
+          return;
+        }
+
+        articleName = input;
+        save();
       });
     }]
   });
@@ -897,7 +936,6 @@ window.addEventListener('load', function() {
   importButton.addEventListener('click', function() {
     getBlob('Paste some HTML here.', function(input) {
       loadArticle(input);
-      updateNav();
       dirty();
     });
   });
