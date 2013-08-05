@@ -737,17 +737,6 @@ window.addEventListener('load', function() {
   }
 
   function load() {
-    var path = window.location.pathname;
-    if (path !== '/') {
-      Docked.open(path.substring(1), function(response) {
-        importArticle(response.content);
-        pristine();
-        delete localStorage.lastArticleName;
-        window.history.replaceState({}, document.title, '/');
-      });
-      return;
-    }
-
     if (!localStorage) {
       return;
     }
