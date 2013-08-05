@@ -73,12 +73,22 @@ article code {
   color: rgb(199, 37, 78);
 }
 
+/* And stealing from StackOverflow here! */
 article kbd {
-  display: inline-block;
-  background-color: #bbb;
-  border-radius: 4px;
-  margin: 0 0.5em;
-  padding: 4px;
+  padding: 0.1em 0.6em;
+  border: 1px solid #ccc;
+  background: #f7f7f7;
+
+  box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2),0 0 0 2px #ffffff inset;
+  -moz-box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2),0 0 0 2px #ffffff inset;
+  -webkit-box-shadow: 0 1px 0px rgba(0, 0, 0, 0.2),0 0 0 2px #ffffff inset;
+
+  border-radius: 3px;
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+
+  text-shadow: 0 1px 0 #fff;
+  white-space: nowrap;
 }
 
 #notices {
@@ -284,9 +294,7 @@ article kbd {
   overflow-x: auto;
 }
 
-.CodeMirror-code:hover,
-.CodeMirror-code > pre:hover,
-.CodeMirror-scroll:hover {
+.CodeMirror *:hover {
   background-color: #fff !important;
 }
 
