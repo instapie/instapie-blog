@@ -17,6 +17,7 @@
             top: 0;
             left: 0;
             padding: 12px;
+            z-index: -1;
         }
 
         nav ul {
@@ -45,7 +46,9 @@
             margin: 0 auto;
             padding: 24pt 32pt;
             min-height: 100%;
+            min-width: 960px;
             box-sizing: border-box;
+            z-index: 1;
         }
 
         article p:empty {
@@ -239,6 +242,7 @@
             right: 75%;
             color: #888;
             font-size: small;
+            z-index: -1;
         }
 
         #shortcuts th,
@@ -263,6 +267,12 @@
         .CodeMirror-scroll {
             overflow-y: hidden;
             overflow-x: auto;
+        }
+
+        .CodeMirror-code:hover,
+        .CodeMirror-code > pre:hover,
+        .CodeMirror-scroll:hover {
+            background-color: #fff !important;
         }
 
         .autohide {
