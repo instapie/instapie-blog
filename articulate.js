@@ -647,8 +647,9 @@ window.addEventListener('load', function() {
         return;
       }
 
-      localStorage.lastArticleName = input;
       article.innerHTML = '<h1 contenteditable="true">' + escapeHTML(input) + '</h1>';
+      document.title = input;
+      localStorage.lastArticleName = input;
       updateNav();
     });
   }
