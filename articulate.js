@@ -1,3 +1,6 @@
+var editors   = {};
+var idCounter = 1;
+
 function getContainerElement(node) {
   var element = node;
   while (element && element.nodeType !== 1) {
@@ -132,6 +135,22 @@ function changeCurrentElementTo(name, attributes) {
   changeElementTo(getCurrentElement(), name, attributes);
 }
 
+function changeCurrentElementToEditor(mode) {
+  if (!isEditing()) {
+    return;
+  }
+
+  var currentElement = getCurrentElement();
+
+  var textarea = createElement('textarea');
+  textarea.value = currentElement.textContent;
+  currentElement.parentNode.replaceChild(textarea, currentElement);
+
+  initializeEditor(textarea);
+
+  dirty();
+}
+
 function changeSelectionTo(element, range, name, attributes) {
   if (!element) {
     return;
@@ -220,6 +239,25 @@ function updateNav() {
     setIdForHeading(headings[i]);
     addNavListItemForHeading(navList, headings[i]);
   }
+}
+
+function initializeEditors() {
+  var textareas = document.querySelectorAll('article > textarea');
+  for (var i = 0; i < textareas.length; ++i) {
+    initializeEditor(textareas[i]);
+  }
+}
+
+function initializeEditor(textarea, mode) {
+  var editor = CodeMirror.fromTextArea(textarea, {
+    autofocus: true,
+    mode: mode,
+    viewportMargin: Infinity
+  });
+
+  var editorId = idCounter++;
+  editors[editorId] = editor;
+  editor.getWrapperElement().setAttribute('data-editor-id', editorId);
 }
 
 function setIdForHeading(heading) {
@@ -367,6 +405,27 @@ function isEditing() {
   return false;
 }
 
+function isInCodeEditor(e) {
+  if (!e.target || e.target.nodeName !== 'TEXTAREA') {
+    return false;
+  }
+
+  return belongsTo(e.target, 'CodeMirror');
+}
+
+function belongsTo(element, parentClass) {
+  var classMatcher = new RegExp('\\b' + parentClass + '\\b');
+
+  while (element.parentNode) {
+    if (classMatcher.test(element.parentNode.className)) {
+      return true;
+    }
+    element = element.parentNode;
+  }
+
+  return false;
+}
+
 function inDevMode() {
   return window.location.hostname === 'localhost';
 }
@@ -381,6 +440,7 @@ window.addEventListener('load', function() {
   var blobDialog     = document.getElementById('modal-blob');
   var blobField      = blobDialog.querySelector('textarea');
   var listDialog     = document.getElementById('modal-list');
+  var listCaption    = listDialog.querySelector('h1');
   var inputList      = listDialog.querySelector('ul');
   var saveButton     = document.getElementById('save');
   var exportButton   = document.getElementById('export');
@@ -427,7 +487,9 @@ window.addEventListener('load', function() {
     getInputFromDialog(blobDialog, blobField, caption, callback);
   }
 
-  function getListSelection(list, callback) {
+  function getListSelection(caption, list, callback) {
+    listCaption.textContent = caption;
+
     // Be sure the list is empty before proceeding.
     inputList.innerHTML = '';
 
@@ -451,6 +513,7 @@ window.addEventListener('load', function() {
         callback(text);
 
         // Clean up. (It's the OCD in me.)
+        listCaption.textContent = '';
         inputList.innerHTML = '';
 
       } finally {
@@ -534,12 +597,6 @@ window.addEventListener('load', function() {
     });
   }
 
-  function saveArticle(articleName) {
-    var articles = JSON.parse(localStorage.articles || '{}');
-    articles[articleName] = article.innerHTML;
-    localStorage.articles = JSON.stringify(articles);
-  }
-
   function getSavedArticleNames() {
     var articles = JSON.parse(localStorage.articles || '{}');
     return Object.keys(articles);
@@ -550,20 +607,51 @@ window.addEventListener('load', function() {
     return articles[articleName];
   }
 
-  function save() {
-    if (articleName) {
-      saveArticle(articleName);
+  function getArticleHtml() {
+    var clone = article.cloneNode(true);
+    var existingEditors = clone.querySelectorAll('.CodeMirror');
+    for (var i = 0; i < existingEditors.length; ++i) {
+      removeEditor(existingEditors[i]);
     }
+    return clone.innerHTML;
+  }
 
-    localStorage.article = article.innerHTML;
+  function removeEditor(wrapper) {
+    var editorId = wrapper.getAttribute('data-editor-id');
+    var editor = editors[editorId];
+    var textarea = wrapper.previousSibling;
+    textarea.value = editor.getValue();
+    textarea.setAttribute('data-mode', editor.getOption('mode'));
+    wrapper.parentNode.removeChild(wrapper);
+    delete editors[editorId];
+  }
+
+  function saveArticle(articleName) {
+    var articles = JSON.parse(localStorage.articles || '{}');
+    articles[articleName] = getArticleHtml();
+    localStorage.articles = JSON.stringify(articles);
 
     pristine();
     notify('Saved!');
   }
 
+  function save() {
+    if (articleName) {
+      saveArticle(articleName);
+      return;
+    }
+
+    getInput('Enter a name for this article', function(input) {
+      articleName = input;
+      saveArticle(input);
+      return;
+    });
+  }
+
   function loadArticle(savedArticle) {
     article.innerHTML = savedArticle;
     updateNav();
+    initializeEditors();
   }
 
   function load() {
@@ -581,7 +669,7 @@ window.addEventListener('load', function() {
   }
 
   function openArticle() {
-    getListSelection(getSavedArticleNames(), function(input) {
+    getListSelection('Select an article', getSavedArticleNames(), function(input) {
       var savedArticle = getArticle(input);
       if (!savedArticle) {
         notify("Article doesn't exist!", 'error');
@@ -657,16 +745,25 @@ window.addEventListener('load', function() {
         return;
       }
 
+      if (isInCodeEditor(e)) {
+        return;
+      }
+
       if (!e.shiftKey) {
         insertNewElement(getCurrentElement().nodeName);
       }
     }],
 
-    'backspace': ['deletes the current element (if empty)', function() {
+    'backspace': ['deletes the current element (if empty)', function(e) {
+      if (isInCodeEditor(e)) {
+        return;
+      }
+
       if (getCurrentElement().textContent === '') {
         removeCurrentElement();
         return;
       }
+
       return true;
     }],
 
@@ -692,6 +789,12 @@ window.addEventListener('load', function() {
 
     'ctrl+q': ['changes the current element to a blockquote (<blockquote>)', function() {
       changeCurrentElementTo('BLOCKQUOTE');
+    }],
+
+    'ctrl+m': ['creates a code editor from the current element', function() {
+      getListSelection('Select a language mode', Object.keys(CodeMirror.modes), function(mode) {
+        changeCurrentElementToEditor(mode);
+      });
     }],
 
     'ctrl+=': ['increases the width of the article', function() {
@@ -780,14 +883,14 @@ window.addEventListener('load', function() {
 
   exportButton.addEventListener('click', function() {
     showElement(blobDialog);
-    blobField.value = article.innerHTML;
+    blobField.value = getArticleHtml();
     focus(blobField);
     blobField.select();
   });
 
   importButton.addEventListener('click', function() {
     getBlob('Paste some HTML here.', function(input) {
-      article.innerHTML = input;
+      loadArticle(input);
       updateNav();
       dirty();
     });
