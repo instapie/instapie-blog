@@ -990,6 +990,7 @@ window.addEventListener('load', function() {
       Docked.open(id, function(response) {
         importArticle(response.content);
         document.title = response.title;
+        delete localStorage.lastArticleName;
         notify('Imported article ' + id + '!');
       });
     });
