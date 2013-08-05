@@ -1,5 +1,5 @@
-var editors   = {};
-var idCounter = 1;
+var editors    = {};
+var idCounter  = 1;
 
 function getContainerElement(node) {
   var element = node;
@@ -489,6 +489,8 @@ window.addEventListener('load', function() {
   var listDialog     = document.getElementById('modal-list');
   var listCaption    = listDialog.querySelector('h1');
   var inputList      = listDialog.querySelector('ul');
+  var uploadButton   = document.getElementById('upload');
+  var downloadButton = document.getElementById('download');
   var saveButton     = document.getElementById('save');
   var deleteButton   = document.getElementById('delete');
   var exportButton   = document.getElementById('export');
@@ -728,6 +730,7 @@ window.addEventListener('load', function() {
     importArticle(savedArticle);
     document.title = articleName;
     localStorage.lastArticleName = articleName;
+    pristine();
   }
 
   function load() {
@@ -956,6 +959,21 @@ window.addEventListener('load', function() {
     if (isHeading(e.target.nodeName)) {
       updateNav();
     }
+  });
+
+  uploadButton.addEventListener('click', function() {
+    Docked.save(getArticleHtml(), function(response) {
+      alert('Saved article - ID: ' + response.id);
+    });
+  });
+
+  downloadButton.addEventListener('click', function() {
+    getInput('Enter a document ID', function(id) {
+      Docked.open(id, function(response) {
+        importArticle(response.content);
+        notify('Imported article ' + id + '!');
+      });
+    });
   });
 
   // Allow the user to save what he/she's written to localStorage.
