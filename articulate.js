@@ -662,10 +662,6 @@ window.addEventListener('load', function() {
     if (localStorage.theme) {
       switchTheme(localStorage.theme);
     }
-
-    if (localStorage.article) {
-      loadArticle(localStorage.article);
-    }
   }
 
   function openArticle() {
