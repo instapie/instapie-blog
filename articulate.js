@@ -489,8 +489,6 @@ window.addEventListener('load', function() {
   var listDialog     = document.getElementById('modal-list');
   var listCaption    = listDialog.querySelector('h1');
   var inputList      = listDialog.querySelector('ul');
-  var uploadButton   = document.getElementById('upload');
-  var downloadButton = document.getElementById('download');
   var saveButton     = document.getElementById('save');
   var deleteButton   = document.getElementById('delete');
   var exportButton   = document.getElementById('export');
@@ -961,13 +959,13 @@ window.addEventListener('load', function() {
     }
   });
 
-  uploadButton.addEventListener('click', function() {
+  exportButton.addEventListener('click', function() {
     Docked.save(getArticleHtml(), function(response) {
       alert('Saved article - ID: ' + response.id);
     });
   });
 
-  downloadButton.addEventListener('click', function() {
+  importButton.addEventListener('click', function() {
     getInput('Enter a document ID', function(id) {
       Docked.open(id, function(response) {
         importArticle(response.content);
@@ -990,20 +988,6 @@ window.addEventListener('load', function() {
     getConfirmation('Really delete "' + articleName + '"?', function() {
       deleteArticle(articleName);
       articleName = null;
-    });
-  });
-
-  exportButton.addEventListener('click', function() {
-    showElement(blobDialog);
-    blobField.value = getArticleHtml();
-    focus(blobField);
-    blobField.select();
-  });
-
-  importButton.addEventListener('click', function() {
-    getBlob('Paste some HTML here.', function(input) {
-      importArticle(input);
-      dirty();
     });
   });
 
