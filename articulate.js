@@ -234,7 +234,7 @@ function updateNav() {
   var navList = document.querySelector('nav > ul');
   navList.innerHTML = '';
 
-  var headings = document.querySelectorAll('h1, h2, h3');
+  var headings = document.querySelectorAll('article > h1, article > h2, article > h3');
   for (var i = 0; i < headings.length; ++i) {
     setIdForHeading(headings[i]);
     addNavListItemForHeading(navList, headings[i]);
@@ -662,6 +662,8 @@ window.addEventListener('load', function() {
     if (localStorage.theme) {
       switchTheme(localStorage.theme);
     }
+
+    updateNav();
   }
 
   function openArticle() {
