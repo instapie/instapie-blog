@@ -14,6 +14,14 @@ function getCurrentElement() {
   return getContainerElement(selection.anchorNode);
 }
 
+function getPreviousElement(element) {
+  var previousElement = element.previousSibling;
+  while (previousElement.nodeType !== 1) {
+    previousElement = previousElement.previousSibling;
+  }
+  return previousElement;
+}
+
 function focus(element) {
   doAfterDelay(0, function() {
     element.focus();
@@ -210,7 +218,7 @@ function insertNewElement(name, oldElement) {
 
 function removeElement(element) {
   var name = element.nodeName;
-  var previousElement = element.previousSibling;
+  var previousElement = getPreviousElement(element);
   element.parentNode.removeChild(element);
   focus(previousElement);
   if (isHeading(name)) {
