@@ -168,7 +168,8 @@ function changeElementToEditor(element, mode) {
   textarea.value = element.textContent;
   element.parentNode.replaceChild(textarea, element);
 
-  initializeEditor(textarea, mode);
+  var editor = initializeEditor(textarea, mode);
+  focus(editor);
 
   dirty();
 }
@@ -279,7 +280,6 @@ function initializeEditor(textarea, mode) {
   }
 
   var editor = CodeMirror.fromTextArea(textarea, {
-    autofocus: true,
     mode: mode,
     viewportMargin: Infinity
   });
@@ -287,6 +287,8 @@ function initializeEditor(textarea, mode) {
   var editorId = idCounter++;
   editors[editorId] = editor;
   editor.getWrapperElement().setAttribute('data-editor-id', editorId);
+
+  return editor;
 }
 
 function setIdForHeading(heading) {
