@@ -234,15 +234,9 @@ function insertNewElement(name, oldElement) {
   focus(newElement);
 }
 
-function createNewElement() {
+function createNewElement(name) {
   var article = document.querySelector('article');
-
-  if (article.children.length > 0) {
-    insertNewElement(getCurrentElement().nodeName);
-    return;
-  }
-
-  var newElement = createElement('H1', { contenteditable: true });
+  var newElement = createElement(name, { contenteditable: true });
   article.appendChild(newElement);
   focus(newElement);
 }
@@ -769,13 +763,25 @@ window.addEventListener('load', function() {
         insertNewElement(currentElement.nodeName, currentElement.previousSibling);
       }],
 
+      'ctrl+shift+enter': ['inserts a new element at the end of the article', function(e) {
+        if (isInCodeEditor()) {
+          return;
+        }
+
+        createNewElement();
+      }],
+
       'enter': [true, 'creates a new element', function(e) {
         if (isInCodeEditor(e) || isModalShowing()) {
           return;
         }
 
         if (!e.shiftKey) {
-          createNewElement();
+          if (article.children.length === 0) {
+            createNewElement('H1');
+          } else {
+            insertNewElement(getCurrentElement().nodeName);
+          }
         }
       }],
 
