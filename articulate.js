@@ -479,7 +479,6 @@ window.addEventListener('load', function() {
   var listDialog     = document.getElementById('modal-list');
   var listCaption    = listDialog.querySelector('h1');
   var inputList      = listDialog.querySelector('ul');
-  var newButton      = document.getElementById('new');
   var saveButton     = document.getElementById('save');
   var deleteButton   = document.getElementById('delete');
   var exportButton   = document.getElementById('export');
@@ -623,20 +622,6 @@ window.addEventListener('load', function() {
       if (input === 'Yes') {
         callback();
       }
-    });
-  }
-
-  function startNewArticle() {
-    getInput('Enter a name for your new article', function(input) {
-      if (isEmpty(input)) {
-        notify('Name is required!', 'error');
-        return;
-      }
-
-      article.innerHTML = '<h1 contenteditable="true">' + escapeHTML(input) + '</h1>';
-      document.title = input;
-      localStorage.lastArticleName = input;
-      updateNav();
     });
   }
 
@@ -917,10 +902,6 @@ window.addEventListener('load', function() {
       contractArticle();
     }],
 
-    'ctrl+n': [true, 'starts a new article', function() {
-      startNewArticle();
-    }],
-
     'ctrl+o': [true, 'opens a saved article', function() {
       openArticle();
     }],
@@ -971,10 +952,6 @@ window.addEventListener('load', function() {
         notify('Imported article ' + id + '!');
       });
     });
-  });
-
-  newButton.addEventListener('click', function() {
-    startNewArticle();
   });
 
   // Allow the user to save what he/she's written to localStorage.
