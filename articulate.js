@@ -928,14 +928,6 @@ window.addEventListener('load', function() {
       inputField.value = document.title;
     });
 
-    tokenButton.addEventListener('click', function() {
-      getInput('Enter the document update token', function(token) {
-        UPDATE_TOKEN = token;
-        localStorage.updateToken = token;
-        notify('Token stored!');
-      });
-    });
-
     window.addEventListener('error', function(e) {
       var message = e.message;
       if (e.lineNumber || e.lineno) {
@@ -957,9 +949,24 @@ window.addEventListener('load', function() {
     document.getElementById('shortcuts').style.display = 'none';
   }
 
-  load();
+  // The token button should always be enabled.
+  tokenButton.addEventListener('click', function() {
+    var tokenExisted = !!UPDATE_TOKEN;
+
+    getInput('Enter the document update token', function(token) {
+      UPDATE_TOKEN = token;
+      localStorage.updateToken = token;
+      notify('Token stored!');
+
+      if (!tokenExisted) {
+        window.location.reload();
+      }
+    });
+  });
 
   if (UPDATE_TOKEN) {
     initializeForEditing();
   }
+
+  load();
 });
