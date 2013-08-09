@@ -764,7 +764,7 @@ window.addEventListener('load', function() {
       }],
 
       'ctrl+shift+enter': ['inserts a new element at the end of the article', function(e) {
-        if (isInCodeEditor()) {
+        if (isInCodeEditor(e)) {
           return;
         }
 
