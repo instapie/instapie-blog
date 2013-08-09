@@ -480,7 +480,6 @@ window.addEventListener('load', function() {
   var listCaption    = listDialog.querySelector('h1');
   var inputList      = listDialog.querySelector('ul');
   var saveButton     = document.getElementById('save');
-  var deleteButton   = document.getElementById('delete');
   var exportButton   = document.getElementById('export');
   var importButton   = document.getElementById('import');
 
@@ -642,13 +641,6 @@ window.addEventListener('load', function() {
       replaceEditor(existingEditors[i]);
     }
     return clone.innerHTML;
-  }
-
-  function deleteArticle(articleName) {
-    var articles = JSON.parse(localStorage.articles || '{}');
-    delete articles[articleName];
-    localStorage.articles = JSON.stringify(articles);
-    notify('"' + articleName + '" deleted!');
   }
 
   function replaceEditor(wrapper) {
@@ -957,20 +949,6 @@ window.addEventListener('load', function() {
   // Allow the user to save what he/she's written to localStorage.
   saveButton.addEventListener('click', function() {
     save();
-  });
-
-  // Allow the user to delete the current work.
-  deleteButton.addEventListener('click', function() {
-    var articleName = localStorage.lastArticleName;
-
-    if (typeof articleName === 'undefined') {
-      return;
-    }
-
-    getConfirmation('Really delete "' + articleName + '"?', function() {
-      deleteArticle(articleName);
-      articleName = null;
-    });
   });
 
   // If the user clicks below the last element, start a new paragraph?
