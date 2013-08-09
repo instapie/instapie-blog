@@ -1,3 +1,6 @@
+var DOCUMENT_ID  = '5205360b70ffe0f9c5000001';
+var UPDATE_TOKEN = localStorage.updateToken;
+
 var editors    = {};
 var idCounter  = 1;
 
@@ -228,6 +231,19 @@ function insertNewElement(name, oldElement) {
   oldElement = oldElement || getCurrentElement();
   var newElement = createElement(name, { contenteditable: true });
   oldElement.parentNode.insertBefore(newElement, oldElement.nextSibling);
+  focus(newElement);
+}
+
+function createNewElement() {
+  var article = document.querySelector('article');
+
+  if (article.children.length > 0) {
+    insertNewElement(getCurrentElement().nodeName);
+    return;
+  }
+
+  var newElement = createElement('H1', { contenteditable: true });
+  article.appendChild(newElement);
   focus(newElement);
 }
 
@@ -480,8 +496,7 @@ window.addEventListener('load', function() {
   var listCaption    = listDialog.querySelector('h1');
   var inputList      = listDialog.querySelector('ul');
   var saveButton     = document.getElementById('save');
-  var exportButton   = document.getElementById('export');
-  var importButton   = document.getElementById('import');
+  var tokenButton    = document.getElementById('set-token');
 
   function getInputFromDialog(dialog, field, caption, callback) {
     field.setAttribute('placeholder', caption);
@@ -668,16 +683,13 @@ window.addEventListener('load', function() {
   }
 
   function save() {
-    var lastArticleName = localStorage.lastArticleName;
-
-    if (lastArticleName) {
-      saveArticle(lastArticleName);
-      return;
+    if (!UPDATE_TOKEN) {
+      notify("You aren't authorized to update this document!", 'error');
     }
 
-    getInput('Enter a name for this article', function(input) {
-      saveArticle(input);
-      return;
+    Docked.update(DOCUMENT_ID, { token: UPDATE_TOKEN, content: getArticleHtml() }, function(response) {
+      pristine();
+      notify('Saved!');
     });
   }
 
@@ -687,35 +699,10 @@ window.addEventListener('load', function() {
     initializeEditors();
   }
 
-  function loadArticle(articleName) {
-    var savedArticle = getArticle(articleName);
-    if (!savedArticle) {
-      notify("Article doesn't exist!", 'error');
-      return;
-    }
-
-    importArticle(savedArticle);
-    document.title = articleName;
-    localStorage.lastArticleName = articleName;
-    pristine();
-  }
-
   function load() {
-    if (!localStorage) {
-      return;
-    }
-
-    var lastArticleName = localStorage.lastArticleName;
-    if (lastArticleName) {
-      loadArticle(lastArticleName);
-    } else {
-      updateNav();
-    }
-  }
-
-  function openArticle() {
-    getListSelection('Select an article', getSavedArticleNames(), function(input) {
-      loadArticle(input);
+    Docked.open(DOCUMENT_ID, function(response) {
+      importArticle(response.content);
+      document.title = response.title;
     });
   }
 
@@ -767,13 +754,13 @@ window.addEventListener('load', function() {
       insertNewElement(currentElement.nodeName, currentElement.previousSibling);
     }],
 
-    'enter': ['creates a new element', function(e) {
+    'enter': [true, 'creates a new element', function(e) {
       if (isInCodeEditor(e) || isModalShowing()) {
         return;
       }
 
       if (!e.shiftKey) {
-        insertNewElement(getCurrentElement().nodeName);
+        createNewElement();
       }
     }],
 
@@ -894,24 +881,8 @@ window.addEventListener('load', function() {
       contractArticle();
     }],
 
-    'ctrl+o': [true, 'opens a saved article', function() {
-      openArticle();
-    }],
-
-    'ctrl+s': [true, 'saves the article locally', function() {
+    'ctrl+s': [true, 'saves the article', function() {
       save();
-    }],
-
-    'ctrl+shift+s': [true, 'saves a copy of the current article', function() {
-      getInput('Enter a new name for the article', function(input) {
-        if (isEmpty(input)) {
-          notify('Name is required!', 'error');
-          return;
-        }
-
-        articleName = input;
-        save();
-      });
     }]
   });
 
@@ -927,33 +898,16 @@ window.addEventListener('load', function() {
     }
   });
 
-  exportButton.addEventListener('click', function() {
-    getInput('Enter a title', function(title) {
-      Docked.save({ title: title, content: getArticleHtml() }, function(response) {
-        alert('Saved article - ID: ' + response.id);
-      });
-    });
-  });
-
-  importButton.addEventListener('click', function() {
-    getInput('Enter a document ID', function(id) {
-      Docked.open(id, function(response) {
-        importArticle(response.content);
-        document.title = response.title;
-        delete localStorage.lastArticleName;
-        notify('Imported article ' + id + '!');
-      });
-    });
-  });
-
-  // Allow the user to save what he/she's written to localStorage.
   saveButton.addEventListener('click', function() {
     save();
   });
 
-  // If the user clicks below the last element, start a new paragraph?
-  article.addEventListener('click', function(e) {
-    // TODO: Implement me :)
+  tokenButton.addEventListener('click', function() {
+    getInput('Enter the document update token', function(token) {
+      UPDATE_TOKEN = token;
+      localStorage.updateToken = token;
+      notify('Token stored!');
+    });
   });
 
   window.addEventListener('error', function(e) {
