@@ -952,6 +952,9 @@ window.addEventListener('load', function() {
     for (var i = 0; i < editableElements.length; ++i) {
       editableElements[i].removeAttribute('contenteditable');
     }
+
+    // Hide shortcut menu
+    document.getElementById('shortcuts').style.display = 'none';
   }
 
   load();
