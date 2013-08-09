@@ -697,6 +697,10 @@ window.addEventListener('load', function() {
     article.innerHTML = savedArticle;
     updateNav();
     initializeEditors();
+
+    if (!UPDATE_TOKEN) {
+      disableEditing();
+    }
   }
 
   function load() {
@@ -933,8 +937,5 @@ window.addEventListener('load', function() {
 
   if (UPDATE_TOKEN) {
     initializeForEditing();
-
-  } else {
-    disableEditing();
   }
 });
