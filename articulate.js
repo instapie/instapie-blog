@@ -683,12 +683,21 @@ window.addEventListener('load', function() {
     notify('Saved!');
   }
 
-  function save() {
+  function save(title) {
     if (!UPDATE_TOKEN) {
       notify("You aren't authorized to update this document!", 'error');
     }
 
-    Docked.update(DOCUMENT_ID, { token: UPDATE_TOKEN, content: getArticleHtml() }, function(response) {
+    title = title || document.title;
+
+    var data = {
+      token: UPDATE_TOKEN,
+      title: title,
+      content: getArticleHtml()
+    };
+
+    Docked.update(DOCUMENT_ID, data, function(response) {
+      document.title = title;
       pristine();
       notify('Saved!');
     });
@@ -905,7 +914,12 @@ window.addEventListener('load', function() {
     });
 
     saveButton.addEventListener('click', function() {
-      save();
+      getInput('Enter a new title', function(title) {
+        save(title);
+      });
+
+      // Yes, this is a hack.
+      inputField.value = document.title;
     });
 
     tokenButton.addEventListener('click', function() {
