@@ -768,7 +768,7 @@ window.addEventListener('load', function() {
           return;
         }
 
-        createNewElement();
+        createNewElement('P');
       }],
 
       'enter': [true, 'creates a new element', function(e) {
