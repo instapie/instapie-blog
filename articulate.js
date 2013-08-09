@@ -324,25 +324,6 @@ function contractArticle() {
   articleStyle.width = (width - 5) + '%';
 }
 
-function switchTheme(theme) {
-  theme = theme || getNextTheme();
-  document.body.className = theme;
-  localStorage.theme = theme;
-}
-
-function getNextTheme() {
-  switch (document.body.className) {
-    case 'default':
-      return 'sky';
-
-    case 'sky':
-      return 'strict';
-
-    default:
-      return 'default';
-  }
-}
-
 function notify(message, className, attributes) {
   var notices = document.querySelector('#notices ul');
   var noticeItem = createElement('LI', attributes);
@@ -747,10 +728,6 @@ window.addEventListener('load', function() {
       return;
     }
 
-    if (localStorage.theme) {
-      switchTheme(localStorage.theme);
-    }
-
     var lastArticleName = localStorage.lastArticleName;
     if (lastArticleName) {
       loadArticle(lastArticleName);
@@ -938,10 +915,6 @@ window.addEventListener('load', function() {
 
     'ctrl+-': [true, 'decreases the width of the article', function() {
       contractArticle();
-    }],
-
-    'ctrl+t': [true, 'switches the current theme', function() {
-      switchTheme();
     }],
 
     'ctrl+n': [true, 'starts a new article', function() {
