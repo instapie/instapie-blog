@@ -297,7 +297,8 @@ function initializeEditor(textarea, mode) {
 
   var editor = CodeMirror.fromTextArea(textarea, {
     mode: mode,
-    viewportMargin: Infinity
+    viewportMargin: Infinity,
+    readOnly: !UPDATE_TOKEN
   });
 
   var editorId = idCounter++;
