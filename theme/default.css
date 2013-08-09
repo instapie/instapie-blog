@@ -48,10 +48,6 @@ body.default article {
     background-color: #eee;
 }
 
-body.default article *:hover {
-    background-color: #def;
-}
-
 body.default article *:focus {
     background-color: #ffe;
 }
