@@ -748,187 +748,193 @@ window.addEventListener('load', function() {
     }
   }
 
-  bind(true, {
-    'ctrl+enter': ['inserts a new element before the current one', function(e) {
-      var currentElement = getCurrentElement();
-      insertNewElement(currentElement.nodeName, currentElement.previousSibling);
-    }],
+  function initializeForEditing() {
+    bind(true, {
+      'ctrl+enter': ['inserts a new element before the current one', function(e) {
+        var currentElement = getCurrentElement();
+        insertNewElement(currentElement.nodeName, currentElement.previousSibling);
+      }],
 
-    'enter': [true, 'creates a new element', function(e) {
-      if (isInCodeEditor(e) || isModalShowing()) {
-        return;
-      }
-
-      if (!e.shiftKey) {
-        createNewElement();
-      }
-    }],
-
-    'backspace': ['deletes the current element (if empty)', function(e) {
-      if (isInCodeEditor(e)) {
-        return;
-      }
-
-      if (getCurrentElement().textContent === '') {
-        removeCurrentElement();
-        return;
-      }
-
-      e.keepDefault = true;
-    }],
-
-    'ctrl+1': ['changes the current element to a top-level heading (<h1>)', function() {
-      changeCurrentElementTo('H1');
-    }],
-
-    'ctrl+2': ['changes the current element to a subheading (<h2>)', function() {
-      changeCurrentElementTo('H2');
-    }],
-
-    'ctrl+3': ['changes the current element to a secondary subheading (<h3>)', function() {
-      changeCurrentElementTo('H3');
-    }],
-
-    'ctrl+p': ['changes the current element to a paragraph (<p>)', function() {
-      changeCurrentElementTo('P');
-    }],
-
-    'ctrl+l': ['changes the current element to a list item (<li>)', function() {
-      changeCurrentElementTo('LI');
-    }],
-
-    'ctrl+q': ['changes the current element to a blockquote (<blockquote>)', function() {
-      changeCurrentElementTo('BLOCKQUOTE');
-    }],
-
-    'ctrl+m': ['creates a code editor from the current element', function() {
-      var currentElement = getCurrentElement();
-      getListSelection('Select a language mode', getAvailableModes(), function(mode) {
-        changeElementToEditor(currentElement, mode);
-      });
-    }],
-
-    'ctrl+i': ['makes the selected text italic', function() {
-      changeCurrentSelectionTo('EM');
-    }],
-
-    'ctrl+b': ['makes the selected text bold', function() {
-      changeCurrentSelectionTo('STRONG');
-    }],
-
-    'ctrl+`': ['marks the selected text as source code (<code>)', function() {
-      changeCurrentSelectionTo('CODE');
-    }],
-
-    'ctrl+k': ['marks the selected text as a keyboard key (<kbd>)', function() {
-      changeCurrentSelectionTo('KBD');
-    }],
-
-    'ctrl+backspace': ['marks the selected text as deleted', function() {
-      changeCurrentSelectionTo('DEL');
-    }],
-
-    'ctrl+a': ['add a hyperlink (<a>)', function(e) {
-      if (isInCodeEditor(e)) {
-        return;
-      }
-
-      var selection = window.getSelection();
-      var anchorNode = selection.anchorNode;
-      var range = getRange(selection);
-
-      getInput('Enter a URL', function(href) {
-        changeSelectionTo(anchorNode, range, 'A', { href: href });
-      });
-    }],
-
-    'ctrl+g': ['add a graphic (<img>)', function() {
-      var element = getCurrentElement();
-
-      getInput('Enter the URL of an image', function(src) {
-        changeElementTo(element, 'IMG', { src: src });
-      });
-    }],
-
-    'esc': [true, null, function() {
-      var autohideElements = document.querySelectorAll('.autohide.visible');
-      if (autohideElements.length > 0) {
-        for (var i = 0; i < autohideElements.length; ++i) {
-          hideElement(autohideElements[i]);
+      'enter': [true, 'creates a new element', function(e) {
+        if (isInCodeEditor(e) || isModalShowing()) {
+          return;
         }
-        return;
-      }
 
-      if (!isEditing()) {
-        return;
-      }
-
-      var currentElement = getCurrentElement();
-      if (currentElement) {
-        currentElement.blur();
-
-        if (isEmpty(currentElement.textContent)) {
-          removeElement(currentElement);
+        if (!e.shiftKey) {
+          createNewElement();
         }
-      }
-    }],
+      }],
 
-    'ctrl+=': [true, 'increases the width of the article', function() {
-      expandArticle();
-    }],
+      'backspace': ['deletes the current element (if empty)', function(e) {
+        if (isInCodeEditor(e)) {
+          return;
+        }
 
-    'ctrl+-': [true, 'decreases the width of the article', function() {
-      contractArticle();
-    }],
+        if (getCurrentElement().textContent === '') {
+          removeCurrentElement();
+          return;
+        }
 
-    'ctrl+s': [true, 'saves the article', function() {
-      save();
-    }]
-  });
+        e.keepDefault = true;
+      }],
 
-  // Whenever the user makes changes...
-  article.addEventListener('input', function(e) {
+      'ctrl+1': ['changes the current element to a top-level heading (<h1>)', function() {
+        changeCurrentElementTo('H1');
+      }],
 
-    // ...mark the Save button...
-    dirty();
+      'ctrl+2': ['changes the current element to a subheading (<h2>)', function() {
+        changeCurrentElementTo('H2');
+      }],
 
-    // ...and update the nav menu (if applicable).
-    if (isHeading(e.target.nodeName)) {
-      updateNav();
-    }
-  });
+      'ctrl+3': ['changes the current element to a secondary subheading (<h3>)', function() {
+        changeCurrentElementTo('H3');
+      }],
 
-  saveButton.addEventListener('click', function() {
-    save();
-  });
+      'ctrl+p': ['changes the current element to a paragraph (<p>)', function() {
+        changeCurrentElementTo('P');
+      }],
 
-  tokenButton.addEventListener('click', function() {
-    getInput('Enter the document update token', function(token) {
-      UPDATE_TOKEN = token;
-      localStorage.updateToken = token;
-      notify('Token stored!');
+      'ctrl+l': ['changes the current element to a list item (<li>)', function() {
+        changeCurrentElementTo('LI');
+      }],
+
+      'ctrl+q': ['changes the current element to a blockquote (<blockquote>)', function() {
+        changeCurrentElementTo('BLOCKQUOTE');
+      }],
+
+      'ctrl+m': ['creates a code editor from the current element', function() {
+        var currentElement = getCurrentElement();
+        getListSelection('Select a language mode', getAvailableModes(), function(mode) {
+          changeElementToEditor(currentElement, mode);
+        });
+      }],
+
+      'ctrl+i': ['makes the selected text italic', function() {
+        changeCurrentSelectionTo('EM');
+      }],
+
+      'ctrl+b': ['makes the selected text bold', function() {
+        changeCurrentSelectionTo('STRONG');
+      }],
+
+      'ctrl+`': ['marks the selected text as source code (<code>)', function() {
+        changeCurrentSelectionTo('CODE');
+      }],
+
+      'ctrl+k': ['marks the selected text as a keyboard key (<kbd>)', function() {
+        changeCurrentSelectionTo('KBD');
+      }],
+
+      'ctrl+backspace': ['marks the selected text as deleted', function() {
+        changeCurrentSelectionTo('DEL');
+      }],
+
+      'ctrl+a': ['add a hyperlink (<a>)', function(e) {
+        if (isInCodeEditor(e)) {
+          return;
+        }
+
+        var selection = window.getSelection();
+        var anchorNode = selection.anchorNode;
+        var range = getRange(selection);
+
+        getInput('Enter a URL', function(href) {
+          changeSelectionTo(anchorNode, range, 'A', { href: href });
+        });
+      }],
+
+      'ctrl+g': ['add a graphic (<img>)', function() {
+        var element = getCurrentElement();
+
+        getInput('Enter the URL of an image', function(src) {
+          changeElementTo(element, 'IMG', { src: src });
+        });
+      }],
+
+      'esc': [true, null, function() {
+        var autohideElements = document.querySelectorAll('.autohide.visible');
+        if (autohideElements.length > 0) {
+          for (var i = 0; i < autohideElements.length; ++i) {
+            hideElement(autohideElements[i]);
+          }
+          return;
+        }
+
+        if (!isEditing()) {
+          return;
+        }
+
+        var currentElement = getCurrentElement();
+        if (currentElement) {
+          currentElement.blur();
+
+          if (isEmpty(currentElement.textContent)) {
+            removeElement(currentElement);
+          }
+        }
+      }],
+
+      'ctrl+=': [true, 'increases the width of the article', function() {
+        expandArticle();
+      }],
+
+      'ctrl+-': [true, 'decreases the width of the article', function() {
+        contractArticle();
+      }],
+
+      'ctrl+s': [true, 'saves the article', function() {
+        save();
+      }]
     });
-  });
 
-  window.addEventListener('error', function(e) {
-    var message = e.message;
-    if (e.lineNumber || e.lineno) {
-      message += ': ' + (e.lineNumber || e.lineno);
+    // Whenever the user makes changes...
+    article.addEventListener('input', function(e) {
+
+      // ...mark the Save button...
+      dirty();
+
+      // ...and update the nav menu (if applicable).
+      if (isHeading(e.target.nodeName)) {
+        updateNav();
+      }
+    });
+
+    saveButton.addEventListener('click', function() {
+      save();
+    });
+
+    tokenButton.addEventListener('click', function() {
+      getInput('Enter the document update token', function(token) {
+        UPDATE_TOKEN = token;
+        localStorage.updateToken = token;
+        notify('Token stored!');
+      });
+    });
+
+    window.addEventListener('error', function(e) {
+      var message = e.message;
+      if (e.lineNumber || e.lineno) {
+        message += ': ' + (e.lineNumber || e.lineno);
+      }
+
+      notify(message, 'error');
+    });
+  }
+
+  function disableEditing() {
+    var editableElements = document.querySelectorAll('[contenteditable]');
+
+    for (var i = 0; i < editableElements.length; ++i) {
+      editableElements[i].removeAttribute('contenteditable');
     }
+  }
 
-    notify(message, 'error');
-  });
-
-  // Load any work-in-progress the user saved locally.
   load();
 
-  // Helpful stuff for local development
-  if (inDevMode()) {
-    doPeriodically(500, function() {
-      var selection = window.getSelection();
-      document.getElementById('anchor-offset').textContent = selection.anchorOffset;
-      document.getElementById('focus-offset').textContent = selection.focusOffset;
-      document.getElementById('total-offset').textContent = getTotalOffset(selection.anchorNode);
-    });
+  if (UPDATE_TOKEN) {
+    initializeForEditing();
+
+  } else {
+    disableEditing();
   }
 });
