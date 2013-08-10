@@ -266,6 +266,7 @@ function createNewElement(name) {
   var newElement = createElement(name, { contenteditable: true });
   article.appendChild(newElement);
   focus(newElement);
+  return newElement;
 }
 
 function removeElement(element) {
@@ -543,6 +544,7 @@ window.addEventListener('load', function() {
   var inputList      = listDialog.querySelector('ul');
   var saveButton     = document.getElementById('save');
   var tokenButton    = document.getElementById('set-token');
+  var customStyles   = document.getElementById('custom-styles');
 
   function getInputFromDialog(dialog, field, caption, callback) {
     field.setAttribute('placeholder', caption);
@@ -845,6 +847,24 @@ window.addEventListener('load', function() {
         createNewElement('P');
       }],
 
+      'ctrl+shift+c': [true, 'opens up a CSS editor', function() {
+        var textarea = createNewElement('textarea');
+        var cssEditor = CodeMirror.fromTextArea(textarea, {
+          mode: 'css',
+          autofocus: true
+        });
+
+        var wrapper = cssEditor.getWrapperElement();
+        wrapper.id = 'css-editor';
+        wrapper.classList.add('autoremove');
+
+        cssEditor.on('change', function() {
+          customStyles.textContent = cssEditor.getValue();
+        });
+
+        cssEditor.setValue(customStyles.textContent);
+      }],
+
       'enter': [true, 'creates a new element', function(e) {
         if (isInCodeEditor(e) || isModalShowing()) {
           return;
@@ -951,9 +971,16 @@ window.addEventListener('load', function() {
       }],
 
       'esc': [true, null, function() {
+        var i;
+
+        var autoremoveElements = document.querySelectorAll('.autoremove');
+        for (i = 0; i < autoremoveElements.length; ++i) {
+          autoremoveElements[i].parentNode.removeChild(autoremoveElements[i]);
+        }
+
         var autohideElements = document.querySelectorAll('.autohide.visible');
         if (autohideElements.length > 0) {
-          for (var i = 0; i < autohideElements.length; ++i) {
+          for (i = 0; i < autohideElements.length; ++i) {
             hideElement(autohideElements[i]);
           }
           return;

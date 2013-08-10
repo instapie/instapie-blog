@@ -269,6 +269,17 @@ article kbd {
   background-color: #abc;
 }
 
+#css-editor {
+  position: fixed;
+  top: 20px;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background-color: #fff;
+  opacity: 0.75;
+  z-index: 1;
+}
+
 #shortcuts {
   position: fixed;
   bottom: 5px;
