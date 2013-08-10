@@ -67,6 +67,11 @@ article img + img {
   margin-top: 20px;
 }
 
+article canvas {
+  width: 100%;
+  background-color: #fff;
+}
+
 /* Just copying Bootstrap here */
 article code {
   background-color: rgb(249, 242, 244);

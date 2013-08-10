@@ -136,8 +136,12 @@ function changeElementTo(oldElement, name, attributes) {
   }
 
   var newElement = createElement(name, attributes);
-  newElement.setAttribute('contenteditable', true);
-  setElementText(newElement, oldElement.textContent || oldElement.value || '');
+
+  if (name !== 'CANVAS' && name !== 'IMG') {
+    newElement.setAttribute('contenteditable', true);
+    setElementText(newElement, oldElement.textContent || oldElement.value || '');
+  }
+
   oldElement.parentNode.replaceChild(newElement, oldElement);
   focus(newElement);
 
@@ -163,7 +167,7 @@ function setElementText(element, text) {
 }
 
 function changeCurrentElementTo(name, attributes) {
-  changeElementTo(getCurrentElement(), name, attributes);
+  return changeElementTo(getCurrentElement(), name, attributes);
 }
 
 function changeElementToEditor(element, mode) {
@@ -175,6 +179,8 @@ function changeElementToEditor(element, mode) {
   focus(editor);
 
   dirty();
+
+  return editor;
 }
 
 function changeCurrentElementToEditor(mode) {
@@ -234,15 +240,9 @@ function insertNewElement(name, oldElement) {
   focus(newElement);
 }
 
-function createNewElement() {
+function createNewElement(name) {
   var article = document.querySelector('article');
-
-  if (article.children.length > 0) {
-    insertNewElement(getCurrentElement().nodeName);
-    return;
-  }
-
-  var newElement = createElement('H1', { contenteditable: true });
+  var newElement = createElement(name, { contenteditable: true });
   article.appendChild(newElement);
   focus(newElement);
 }
@@ -297,7 +297,8 @@ function initializeEditor(textarea, mode) {
 
   var editor = CodeMirror.fromTextArea(textarea, {
     mode: mode,
-    viewportMargin: Infinity
+    viewportMargin: Infinity,
+    readOnly: !UPDATE_TOKEN
   });
 
   var editorId = idCounter++;
@@ -305,6 +306,28 @@ function initializeEditor(textarea, mode) {
   editor.getWrapperElement().setAttribute('data-editor-id', editorId);
 
   return editor;
+}
+
+function initializeDrawingAreas() {
+  var images = document.querySelectorAll('article > img[src*="data:image/png;base64"]');
+
+  for (var i = 0; i < images.length; ++i) {
+    initializeDrawingArea(images[i]);
+  }
+}
+
+function initializeDrawingArea(image) {
+  var drawingArea = createElement('CANVAS');
+  var context = drawingArea.getContext('2d');
+  image.parentNode.insertBefore(drawingArea, image);
+
+  var onImageReady = function() {
+    image.parentNode.removeChild(image);
+    Sketchy.fromCanvas(drawingArea);
+    context.drawImage(image, 0, 0);
+  };
+
+  image.complete ? onImageReady() : image.addEventListener('load', onImageReady);
 }
 
 function setIdForHeading(heading) {
@@ -651,10 +674,21 @@ window.addEventListener('load', function() {
 
   function getArticleHtml() {
     var clone = article.cloneNode(true);
+
+    // Just declare the counter once.
+    var i;
+
     var existingEditors = clone.querySelectorAll('.CodeMirror');
-    for (var i = 0; i < existingEditors.length; ++i) {
+    for (i = 0; i < existingEditors.length; ++i) {
       replaceEditor(existingEditors[i]);
     }
+
+    var drawingAreas = article.querySelectorAll('canvas');
+    var clonedDrawingAreas = clone.querySelectorAll('canvas');
+    for (i = 0; i < drawingAreas.length; ++i) {
+      replaceDrawingArea(clonedDrawingAreas[i], drawingAreas[i]);
+    }
+
     return clone.innerHTML;
   }
 
@@ -672,6 +706,18 @@ window.addEventListener('load', function() {
     parent.removeChild(textarea);
   }
 
+  function replaceDrawingArea(canvas, originalCanvas) {
+    var img = createElement('IMG');
+    img.src = originalCanvas.toDataURL();
+
+    var parent = canvas.parentNode;
+    var overlay = canvas.nextSibling;
+
+    parent.insertBefore(img, canvas);
+    parent.removeChild(canvas);
+    parent.removeChild(overlay);
+  }
+
   function saveArticle(articleName) {
     var articles = JSON.parse(localStorage.articles || '{}');
     articles[articleName] = getArticleHtml();
@@ -682,12 +728,21 @@ window.addEventListener('load', function() {
     notify('Saved!');
   }
 
-  function save() {
+  function save(title) {
     if (!UPDATE_TOKEN) {
       notify("You aren't authorized to update this document!", 'error');
     }
 
-    Docked.update(DOCUMENT_ID, { token: UPDATE_TOKEN, content: getArticleHtml() }, function(response) {
+    title = title || document.title;
+
+    var data = {
+      token: UPDATE_TOKEN,
+      title: title,
+      content: getArticleHtml()
+    };
+
+    Docked.update(DOCUMENT_ID, data, function(response) {
+      document.title = title;
       pristine();
       notify('Saved!');
     });
@@ -695,7 +750,21 @@ window.addEventListener('load', function() {
 
   function importArticle(savedArticle) {
     article.innerHTML = savedArticle;
+
+    // Draw the table of contents.
     updateNav();
+
+    if (UPDATE_TOKEN) {
+      // Only convert images to Sketchy canvases if the user is editing.
+      initializeDrawingAreas();
+
+    } else {
+      // Other wise, get rid of contenteditable="true" on all elements, etc.
+      disableEditing();
+    }
+
+    // Editors get initialized either way (for syntax highlighting, mainly);
+    // if UPDATE_TOKEN isn't present they'll be in read-only mode.
     initializeEditors();
   }
 
@@ -703,6 +772,7 @@ window.addEventListener('load', function() {
     Docked.open(DOCUMENT_ID, function(response) {
       importArticle(response.content);
       document.title = response.title;
+      pristine();
     });
   }
 
@@ -755,13 +825,25 @@ window.addEventListener('load', function() {
         insertNewElement(currentElement.nodeName, currentElement.previousSibling);
       }],
 
+      'ctrl+shift+enter': ['inserts a new element at the end of the article', function(e) {
+        if (isInCodeEditor(e)) {
+          return;
+        }
+
+        createNewElement('P');
+      }],
+
       'enter': [true, 'creates a new element', function(e) {
         if (isInCodeEditor(e) || isModalShowing()) {
           return;
         }
 
         if (!e.shiftKey) {
-          createNewElement();
+          if (article.children.length === 0) {
+            createNewElement('H1');
+          } else {
+            insertNewElement(getCurrentElement().nodeName);
+          }
         }
       }],
 
@@ -807,6 +889,11 @@ window.addEventListener('load', function() {
         getListSelection('Select a language mode', getAvailableModes(), function(mode) {
           changeElementToEditor(currentElement, mode);
         });
+      }],
+
+      'ctrl+d': ['changes the current element to a drawing area (<canvas>)', function() {
+        var canvas = changeCurrentElementTo('CANVAS');
+        Sketchy.fromCanvas(canvas);
       }],
 
       'ctrl+i': ['makes the selected text italic', function() {
@@ -900,15 +987,12 @@ window.addEventListener('load', function() {
     });
 
     saveButton.addEventListener('click', function() {
-      save();
-    });
-
-    tokenButton.addEventListener('click', function() {
-      getInput('Enter the document update token', function(token) {
-        UPDATE_TOKEN = token;
-        localStorage.updateToken = token;
-        notify('Token stored!');
+      getInput('Enter a new title', function(title) {
+        save(title);
       });
+
+      // Yes, this is a hack.
+      inputField.value = document.title;
     });
 
     window.addEventListener('error', function(e) {
@@ -927,14 +1011,29 @@ window.addEventListener('load', function() {
     for (var i = 0; i < editableElements.length; ++i) {
       editableElements[i].removeAttribute('contenteditable');
     }
+
+    // Hide shortcut menu
+    document.getElementById('shortcuts').style.display = 'none';
   }
 
-  load();
+  // The token button should always be enabled.
+  tokenButton.addEventListener('click', function() {
+    var tokenExisted = !!UPDATE_TOKEN;
+
+    getInput('Enter the document update token', function(token) {
+      UPDATE_TOKEN = token;
+      localStorage.updateToken = token;
+      notify('Token stored!');
+
+      if (!tokenExisted) {
+        window.location.reload();
+      }
+    });
+  });
 
   if (UPDATE_TOKEN) {
     initializeForEditing();
-
-  } else {
-    disableEditing();
   }
+
+  load();
 });
