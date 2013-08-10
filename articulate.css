@@ -139,7 +139,8 @@ article kbd {
   padding: 8px;
 }
 
-#modal-input {
+#modal-input,
+#modal-password-input {
   position: fixed;
   top: 50%;
   left: 10%;
@@ -150,7 +151,8 @@ article kbd {
   z-index: 1;
 }
 
-#modal-input:before {
+#modal-input:before,
+#modal-password-input:before {
   display: block;
   position: absolute;
   top: 0;
@@ -164,7 +166,8 @@ article kbd {
   z-index: -1;
 }
 
-#modal-input input {
+#modal-input input,
+#modal-password-input input {
   display: block;
   position: absolute;
   top: 50%;

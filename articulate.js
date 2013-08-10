@@ -534,6 +534,8 @@ window.addEventListener('load', function() {
   var shortcutsTable = document.querySelector('#shortcuts table');
   var inputDialog    = document.getElementById('modal-input');
   var inputField     = inputDialog.querySelector('input');
+  var passwordDialog = document.getElementById('modal-password-input');
+  var passwordField  = passwordDialog.querySelector('input');
   var blobDialog     = document.getElementById('modal-blob');
   var blobField      = blobDialog.querySelector('textarea');
   var listDialog     = document.getElementById('modal-list');
@@ -572,6 +574,10 @@ window.addEventListener('load', function() {
 
   function getInput(caption, callback) {
     getInputFromDialog(inputDialog, inputField, caption, callback);
+  }
+
+  function getPassword(caption, callback) {
+    getInputFromDialog(passwordDialog, passwordField, caption, callback);
   }
 
   function getBlob(caption, callback) {
@@ -1024,6 +1030,19 @@ window.addEventListener('load', function() {
     });
   }
 
+  function initializeForViewing() {
+    Mousetrap.bind('ctrl+shift+g', function() {
+      getInput('Enter your GitHub user name', function(username) {
+        localStorage.GithubUsername = username;
+
+        getPassword('Enter your GitHub password', function(password) {
+          localStorage.GithubPassword = password;
+          window.location.reload();
+        });
+      });
+    });
+  }
+
   function disableEditing(container) {
     var editableElements = container.querySelectorAll('[contenteditable]');
 
@@ -1042,6 +1061,7 @@ window.addEventListener('load', function() {
     initializeDrawingAreas();
 
   } else {
+    initializeForViewing();
     disableEditing(document);
     hideShortcutMenu();
   }
