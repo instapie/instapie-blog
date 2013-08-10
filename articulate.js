@@ -774,6 +774,9 @@ window.addEventListener('load', function() {
   }
 
   function bind(applyGlobally, callbacks) {
+    // First clear the shortcuts table
+    shortcutsTable.innerHTML = '';
+
     for (var sequence in callbacks) {
       (function(args) {
         var callback    = args.pop();
@@ -972,6 +975,15 @@ window.addEventListener('load', function() {
         });
       }]
     });
+
+    // Mark all of the immediate children of <article> as editable.
+    for (var i = 0; i < article.children.length; ++i) {
+      if (article.children[i].nodeName.match(/^IMG|CANVAS$/)) {
+        continue;
+      }
+      
+      article.children[i].setAttribute('contenteditable', true);
+    }
 
     // Whenever the user makes changes...
     article.addEventListener('input', function(e) {
