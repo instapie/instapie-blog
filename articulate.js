@@ -1,6 +1,27 @@
-var DOCUMENT_ID  = '5205360b70ffe0f9c5000001';
-var UPDATE_TOKEN = localStorage.updateToken;
+// Set up authentication with GitHub
+var GITHUB_USERNAME   = localStorage.GithubUsername;
+var GITHUB_PASSWORD   = localStorage.GithubPassword;
+var GITHUB_REPOSITORY = 'stream';
+var GITHUB_BRANCH     = 'gh-pages';
 
+var Client = null;
+var Repo   = null;
+
+if (GITHUB_PASSWORD) {
+  Client = new Github({
+    username: GITHUB_USERNAME,
+    password: GITHUB_PASSWORD,
+    auth: "basic"
+  });
+
+  Repo = Client.getRepo(GITHUB_USERNAME, GITHUB_REPOSITORY);
+}
+
+function isAuthenticated() {
+  return !!Client;
+}
+
+// TODO: Refactor this ridiculous mess here.
 var editors    = {};
 var idCounter  = 1;
 
@@ -298,7 +319,7 @@ function initializeEditor(textarea, mode) {
   var editor = CodeMirror.fromTextArea(textarea, {
     mode: mode,
     viewportMargin: Infinity,
-    readOnly: !UPDATE_TOKEN
+    readOnly: !GITHUB_PASSWORD
   });
 
   var editorId = idCounter++;
@@ -672,8 +693,8 @@ window.addEventListener('load', function() {
     return articles[articleName];
   }
 
-  function getArticleHtml() {
-    var clone = article.cloneNode(true);
+  function getDocumentHtml() {
+    var clone = document.documentElement.cloneNode(true);
 
     // Just declare the counter once.
     var i;
@@ -683,7 +704,7 @@ window.addEventListener('load', function() {
       replaceEditor(existingEditors[i]);
     }
 
-    var drawingAreas = article.querySelectorAll('canvas');
+    var drawingAreas = document.querySelectorAll('canvas');
     var clonedDrawingAreas = clone.querySelectorAll('canvas');
     for (i = 0; i < drawingAreas.length; ++i) {
       replaceDrawingArea(clonedDrawingAreas[i], drawingAreas[i]);
@@ -720,7 +741,7 @@ window.addEventListener('load', function() {
 
   function saveArticle(articleName) {
     var articles = JSON.parse(localStorage.articles || '{}');
-    articles[articleName] = getArticleHtml();
+    articles[articleName] = getDocumentHtml();
     localStorage.articles = JSON.stringify(articles);
     localStorage.lastArticleName = articleName;
 
@@ -728,51 +749,20 @@ window.addEventListener('load', function() {
     notify('Saved!');
   }
 
-  function save(title) {
-    if (!UPDATE_TOKEN) {
+  function save(message) {
+    if (!isAuthenticated()) {
       notify("You aren't authorized to update this document!", 'error');
     }
 
-    title = title || document.title;
+    var content = getDocumentHtml();
 
-    var data = {
-      token: UPDATE_TOKEN,
-      title: title,
-      content: getArticleHtml()
-    };
+    Repo.write(GITHUB_BRANCH, 'index.html', content, message, function(err) {
+      if (err) {
+        notify(err, 'error');
 
-    Docked.update(DOCUMENT_ID, data, function(response) {
-      document.title = title;
-      pristine();
-      notify('Saved!');
-    });
-  }
-
-  function importArticle(savedArticle) {
-    article.innerHTML = savedArticle;
-
-    // Draw the table of contents.
-    updateNav();
-
-    if (UPDATE_TOKEN) {
-      // Only convert images to Sketchy canvases if the user is editing.
-      initializeDrawingAreas();
-
-    } else {
-      // Other wise, get rid of contenteditable="true" on all elements, etc.
-      disableEditing();
-    }
-
-    // Editors get initialized either way (for syntax highlighting, mainly);
-    // if UPDATE_TOKEN isn't present they'll be in read-only mode.
-    initializeEditors();
-  }
-
-  function load() {
-    Docked.open(DOCUMENT_ID, function(response) {
-      importArticle(response.content);
-      document.title = response.title;
-      pristine();
+      } else {
+        notify('Saved to GitHub!');
+      }
     });
   }
 
@@ -970,7 +960,9 @@ window.addEventListener('load', function() {
       }],
 
       'ctrl+s': [true, 'saves the article', function() {
-        save();
+        getInput('Enter a commit message', function(message) {
+          save(message);
+        });
       }]
     });
 
@@ -987,12 +979,9 @@ window.addEventListener('load', function() {
     });
 
     saveButton.addEventListener('click', function() {
-      getInput('Enter a new title', function(title) {
-        save(title);
+      getInput('Enter a commit message', function(message) {
+        save(message);
       });
-
-      // Yes, this is a hack.
-      inputField.value = document.title;
     });
 
     window.addEventListener('error', function(e) {
@@ -1016,24 +1005,14 @@ window.addEventListener('load', function() {
     document.getElementById('shortcuts').style.display = 'none';
   }
 
-  // The token button should always be enabled.
-  tokenButton.addEventListener('click', function() {
-    var tokenExisted = !!UPDATE_TOKEN;
-
-    getInput('Enter the document update token', function(token) {
-      UPDATE_TOKEN = token;
-      localStorage.updateToken = token;
-      notify('Token stored!');
-
-      if (!tokenExisted) {
-        window.location.reload();
-      }
-    });
-  });
-
-  if (UPDATE_TOKEN) {
+  if (isAuthenticated()) {
     initializeForEditing();
+    initializeEditors();
+    initializeDrawingAreas();
+
+  } else {
+    disableEditing();
   }
 
-  load();
+  updateNav();
 });
