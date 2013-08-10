@@ -994,6 +994,11 @@ window.addEventListener('load', function() {
       // ...and update the nav menu (if applicable).
       if (isHeading(e.target.nodeName)) {
         updateNav();
+
+        // Also, update the document title if this is the top heading.
+        if (e.target === article.firstChild) {
+          document.title = e.target.textContent;
+        }
       }
     });
 
