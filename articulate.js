@@ -717,7 +717,7 @@ window.addEventListener('load', function() {
       replaceDrawingArea(clonedDrawingAreas[i], drawingAreas[i]);
     }
 
-    return clone.outerHTML;
+    return '<!DOCTYPE html>\n' + clone.outerHTML;
   }
 
   function replaceEditor(wrapper) {
