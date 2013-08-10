@@ -1,12 +1,9 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <title>Articulate</title>
-    <link rel="stylesheet" type="text/css" href="codemirror.css" />
-    <link rel="stylesheet" type="text/css" href="articulate.css" />
-    <link rel="stylesheet" type="text/css" href="theme/default.css" />
-    <link rel="stylesheet" type="text/css" href="sketchy.css" />
+<html><head>
+    <title>Articulate*</title>
+    <link rel="stylesheet" type="text/css" href="codemirror.css">
+    <link rel="stylesheet" type="text/css" href="articulate.css">
+    <link rel="stylesheet" type="text/css" href="theme/default.css">
+    <link rel="stylesheet" type="text/css" href="sketchy.css">
     <script src="mousetrap.js"></script>
     <script src="mousetrap-global-bind.js"></script>
     <script src="codemirror.js"></script>
@@ -24,21 +21,21 @@
 
 <body class="default">
     <nav>
-        <ul></ul>
+        <ul><li class="h1"><a href="#stream">Stream</a></li></ul>
     </nav>
 
     <aside id="notices">
         <ul></ul>
     </aside>
 
-    <article></article>
+    <article><h1 id="stream">Stream</h1></article>
 
     <div id="toolbar">
-        <button id="save">Save</button>
+        <button id="save">Save*</button>
     </div>
 
     <div id="modal-input" class="autohide">
-        <input type="text" />
+        <input type="text" placeholder="Enter a commit message">
     </div>
 
     <div id="modal-blob" class="autohide">
@@ -51,8 +48,9 @@
     </div>
 
     <aside id="shortcuts">
-        <table></table>
+        <table><tr><th><kbd>ctrl+enter</kbd></th><td>inserts a new element before the current one</td></tr><tr><th><kbd>ctrl+shift+enter</kbd></th><td>inserts a new element at the end of the article</td></tr><tr><th><kbd>enter</kbd></th><td>creates a new element</td></tr><tr><th><kbd>backspace</kbd></th><td>deletes the current element (if empty)</td></tr><tr><th><kbd>ctrl+1</kbd></th><td>changes the current element to a top-level heading (&lt;h1&gt;)</td></tr><tr><th><kbd>ctrl+2</kbd></th><td>changes the current element to a subheading (&lt;h2&gt;)</td></tr><tr><th><kbd>ctrl+3</kbd></th><td>changes the current element to a secondary subheading (&lt;h3&gt;)</td></tr><tr><th><kbd>ctrl+p</kbd></th><td>changes the current element to a paragraph (&lt;p&gt;)</td></tr><tr><th><kbd>ctrl+l</kbd></th><td>changes the current element to a list item (&lt;li&gt;)</td></tr><tr><th><kbd>ctrl+q</kbd></th><td>changes the current element to a blockquote (&lt;blockquote&gt;)</td></tr><tr><th><kbd>ctrl+m</kbd></th><td>creates a code editor from the current element</td></tr><tr><th><kbd>ctrl+d</kbd></th><td>changes the current element to a drawing area (&lt;canvas&gt;)</td></tr><tr><th><kbd>ctrl+i</kbd></th><td>makes the selected text italic</td></tr><tr><th><kbd>ctrl+b</kbd></th><td>makes the selected text bold</td></tr><tr><th><kbd>ctrl+`</kbd></th><td>marks the selected text as source code (&lt;code&gt;)</td></tr><tr><th><kbd>ctrl+k</kbd></th><td>marks the selected text as a keyboard key (&lt;kbd&gt;)</td></tr><tr><th><kbd>ctrl+backspace</kbd></th><td>marks the selected text as deleted</td></tr><tr><th><kbd>ctrl+a</kbd></th><td>add a hyperlink (&lt;a&gt;)</td></tr><tr><th><kbd>ctrl+g</kbd></th><td>add a graphic (&lt;img&gt;)</td></tr><tr><th><kbd>ctrl+=</kbd></th><td>increases the width of the article</td></tr><tr><th><kbd>ctrl+-</kbd></th><td>decreases the width of the article</td></tr><tr><th><kbd>ctrl+s</kbd></th><td>saves the article</td></tr></table>
     </aside>
-</body>
 
-</html>
+
+
+</body></html>
