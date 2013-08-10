@@ -699,18 +699,25 @@ window.addEventListener('load', function() {
     // Just declare the counter once.
     var i;
 
+    // First, let's strip all contenteditable elements of that attribute.
+    disableEditing(clone);
+
+    // Next, we'll find all CodeMirror instances and replace them with simple
+    // <pre> elements.
     var existingEditors = clone.querySelectorAll('.CodeMirror');
     for (i = 0; i < existingEditors.length; ++i) {
       replaceEditor(existingEditors[i]);
     }
 
+    // Finally, we'll find all those canvases we were drawing on and replace
+    // them with <img> elements.
     var drawingAreas = document.querySelectorAll('canvas');
     var clonedDrawingAreas = clone.querySelectorAll('canvas');
     for (i = 0; i < drawingAreas.length; ++i) {
       replaceDrawingArea(clonedDrawingAreas[i], drawingAreas[i]);
     }
 
-    return clone.innerHTML;
+    return clone.outerHTML;
   }
 
   function replaceEditor(wrapper) {
@@ -994,14 +1001,15 @@ window.addEventListener('load', function() {
     });
   }
 
-  function disableEditing() {
-    var editableElements = document.querySelectorAll('[contenteditable]');
+  function disableEditing(container) {
+    var editableElements = container.querySelectorAll('[contenteditable]');
 
     for (var i = 0; i < editableElements.length; ++i) {
       editableElements[i].removeAttribute('contenteditable');
     }
+  }
 
-    // Hide shortcut menu
+  function hideShortcutMenu() {
     document.getElementById('shortcuts').style.display = 'none';
   }
 
@@ -1011,7 +1019,8 @@ window.addEventListener('load', function() {
     initializeDrawingAreas();
 
   } else {
-    disableEditing();
+    disableEditing(document);
+    hideShortcutMenu();
   }
 
   updateNav();
