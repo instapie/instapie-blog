@@ -702,6 +702,9 @@ window.addEventListener('load', function() {
     // First, let's strip all contenteditable elements of that attribute.
     disableEditing(clone);
 
+    // Let's also clear the shortcuts table.
+    clone.querySelector('#shortcuts table').innerHTML = '';
+
     // Next, we'll find all CodeMirror instances and replace them with simple
     // <pre> elements.
     var existingEditors = clone.querySelectorAll('.CodeMirror');
@@ -774,9 +777,6 @@ window.addEventListener('load', function() {
   }
 
   function bind(applyGlobally, callbacks) {
-    // First clear the shortcuts table
-    shortcutsTable.innerHTML = '';
-
     for (var sequence in callbacks) {
       (function(args) {
         var callback    = args.pop();
