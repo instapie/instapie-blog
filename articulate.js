@@ -764,15 +764,20 @@ window.addEventListener('load', function() {
       notify("You aren't authorized to update this document!", 'error');
     }
 
+    // Marking pristine BEFORE getting HTML so that it saves nice and clean.
+    // Don't worry -- if the save fails, we'll dirty it again.
+    pristine();
+
     var content = getDocumentHtml();
 
     Repo.write(GITHUB_BRANCH, 'index.html', content, message, function(err) {
       if (err) {
+        // See? Just like I promised.
+        dirty();
         notify(err, 'error');
 
       } else {
         notify('Saved to GitHub!');
-        pristine();
       }
     });
   }
