@@ -772,6 +772,7 @@ window.addEventListener('load', function() {
 
       } else {
         notify('Saved to GitHub!');
+        pristine();
       }
     });
   }
