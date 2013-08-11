@@ -1,8 +1,62 @@
+@import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700|Source+Sans+Pro);
+
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
+}
+
+body {
+    background-color: #ddd;
+    font-family: "Source Sans Pro", sans-serif;
+}
+
+body nav ul li a:visited {
+    color: #00f;
+}
+
+body nav ul li a:hover {
+    color: #48f;
+}
+
+body h1 {
+    font-size: 48pt;
+    font-weight: 300;
+    min-height: 52pt;
+    border-bottom: 1px solid black;
+}
+
+body h2 {
+    font-size: 40pt;
+    min-height: 42pt;
+    border-left: 8px solid #888;
+    padding-left: 16px;
+}
+
+body h3 {
+    color: #444;
+    font-size: 32pt;
+    font-weight: bold;
+    min-height: 34pt;
+    border-left: 8px solid #bbb;
+    padding-left: 16px;
+}
+
+body p {
+    min-height: 20px;
+}
+
+body a {
+    cursor: pointer;
+}
+
+body article {
+    background-color: #eee;
+}
+
+body article *:focus {
+    background-color: #ffe;
 }
 
 nav {
