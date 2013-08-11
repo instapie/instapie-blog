@@ -6,29 +6,39 @@
     <link rel="stylesheet" type="text/css" href="lib/codemirror.css">
     <link rel="stylesheet" type="text/css" href="lib/sketchy.css">
     <link rel="stylesheet" type="text/css" href="articulate.css">
-    <script src="lib/mousetrap.js"></script>
-    <script src="lib/mousetrap-global-bind.js"></script>
-    <script src="lib/codemirror.js"></script>
-    <script src="lib/mode/css.js"></script>
-    <script src="lib/mode/less.js"></script>
-    <script src="lib/mode/sass.js"></script>
-    <script src="lib/mode/clike.js"></script>
-    <script src="lib/mode/coffeescript.js"></script>
-    <script src="lib/mode/javascript.js"></script>
-    <script src="lib/mode/python.js"></script>
-    <script src="lib/mode/ruby.js"></script>
-    <script src="lib/less.js"></script>
-    <script src="lib/sass.js"></script>
-    <script src="lib/base64.js"></script>
-    <script src="lib/underscore-min.js"></script>
-    <script src="lib/github.js"></script>
-    <script src="lib/sketchy.js"></script>
-    <script src="articulate.js"></script>
+    <script src="lib/head.js"></script>
+
+    <script><!--
+        head.js(
+          "lib/mousetrap.js",
+          "lib/mousetrap-global-bind.js",
+          "lib/codemirror.js",
+          "lib/mode/css.js",
+          "lib/mode/less.js",
+          "lib/mode/sass.js",
+          "lib/mode/clike.js",
+          "lib/mode/coffeescript.js",
+          "lib/mode/javascript.js",
+          "lib/mode/python.js",
+          "lib/mode/ruby.js",
+          "lib/less.js",
+          "lib/sass.js",
+          "lib/base64.js",
+          "lib/underscore-min.js",
+          "lib/github.js",
+          "lib/sketchy.js",
+          "articulate.js",
+
+          function() {
+            document.body.removeAttribute('class');
+          }
+        );
+    --></script>
 
     <style type="text/css" id="custom-styles"></style>
 </head>
 
-<body>
+<body class="loading">
     <nav>
         <ul><li class="h1"><a href="#stream">Stream</a></li><li class="h2"><a href="#what-is-it-">What is it?</a></li></ul>
     </nav>
