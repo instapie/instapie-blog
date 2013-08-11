@@ -441,6 +441,24 @@ function doAfterDelay(delay, callback) {
   return setTimeout(callback, delay);
 }
 
+function getWithAjax(path, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', path);
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      callback(xhr.responseText);
+    }
+  };
+
+  xhr.onerror = function() {
+    notify('File ' + path + 'does not exist!', error);
+    callback('');
+  };
+
+  xhr.send();
+}
+
 function arrayContains(array, element) {
   for (var i = 0; i < array.length; ++i) {
     if (array[i] === element) {
@@ -887,7 +905,9 @@ window.addEventListener('load', function() {
             renderCssForMode();
           });
 
-          cssEditor.setValue(customStyles.textContent);
+          getWithAjax('articulate.' + mode, function(source) {
+            cssEditor.setValue(source);
+          });
         });
       }],
 
