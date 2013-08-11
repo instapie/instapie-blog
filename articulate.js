@@ -848,21 +848,47 @@ window.addEventListener('load', function() {
       }],
 
       'ctrl+shift+c': [true, 'opens up a CSS editor', function() {
-        var textarea = createNewElement('textarea');
-        var cssEditor = CodeMirror.fromTextArea(textarea, {
-          mode: 'css',
-          autofocus: true
+        getListSelection('Select a language mode', ['css', 'less', 'sass'], function(mode) {
+          var textarea = createNewElement('textarea');
+          var cssEditor = CodeMirror.fromTextArea(textarea, {
+            mode: mode,
+            autofocus: true
+          });
+
+          var wrapper = cssEditor.getWrapperElement();
+          wrapper.id = 'css-editor';
+          wrapper.classList.add('autoremove');
+
+          var renderCssForMode = function() {
+            var raw = cssEditor.getValue();
+
+            switch (mode) {
+              case 'css':
+                customStyles.textContent = raw;
+                break;
+
+              case 'less':
+                new less.Parser().parse(raw, function(err, tree) {
+                  if (err) {
+                    return;
+                  }
+
+                  customStyles.textContent = tree.toCSS();
+                });
+                break;
+
+              case 'sass':
+                customStyles.textContent = sass.render(raw);
+                break;
+            }
+          };
+
+          cssEditor.on('change', function() {
+            renderCssForMode();
+          });
+
+          cssEditor.setValue(customStyles.textContent);
         });
-
-        var wrapper = cssEditor.getWrapperElement();
-        wrapper.id = 'css-editor';
-        wrapper.classList.add('autoremove');
-
-        cssEditor.on('change', function() {
-          customStyles.textContent = cssEditor.getValue();
-        });
-
-        cssEditor.setValue(customStyles.textContent);
       }],
 
       'enter': [true, 'creates a new element', function(e) {
