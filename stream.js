@@ -854,14 +854,16 @@ window.addEventListener('load', function() {
       return;
     }
 
-    Repo.write(GITHUB_BRANCH, 'src/stream.' + customCss.mode, customCss.content, message, function(err) {
-      if (err) {
-        notify('Unable to sync to GitHub!', 'error');
+    if (customCss.mode.match(/^less|sass$/)) {
+      Repo.write(GITHUB_BRANCH, 'src/stream.' + customCss.mode, customCss.content, message, function(err) {
+        if (err) {
+          notify('Unable to sync to GitHub!', 'error');
 
-      } else {
-        notify('Saved ' + customCss.mode + ' to GitHub!');
-      }
-    });
+        } else {
+          notify('Saved ' + customCss.mode + ' to GitHub!');
+        }
+      });
+    }
 
     var css = getCurrentCss();
 
@@ -989,7 +991,12 @@ window.addEventListener('load', function() {
 
           cssEditor.on('change', throttle(renderCssForMode, 300));
 
-          getWithAjax('src/stream.' + mode, function(source) {
+          var fileName = 'stream.' + mode;
+          if (mode.match(/^less|sass$/)) {
+            fileName = 'src/' + fileName;
+          }
+
+          getWithAjax(fileName, function(source) {
             cssEditor.setValue(source);
           });
         });
