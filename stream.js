@@ -263,10 +263,9 @@ function insertNewElement(name, oldElement) {
   focus(newElement);
 }
 
-function createNewElement(name) {
-  var article = document.querySelector('article');
+function createNewElement(name, container) {
   var newElement = createElement(name, { contenteditable: true });
-  article.appendChild(newElement);
+  (container || document.querySelector('article')).appendChild(newElement);
   focus(newElement);
   return newElement;
 }
@@ -935,7 +934,7 @@ window.addEventListener('load', function() {
 
       'ctrl+shift+c': [true, 'opens up a CSS editor', function() {
         getListSelection('Select a language mode', ['css', 'less', 'sass'], function(mode) {
-          var textarea = createNewElement('textarea');
+          var textarea = createNewElement('textarea', document.body);
           var cssEditor = CodeMirror.fromTextArea(textarea, {
             mode: mode,
             autofocus: true
