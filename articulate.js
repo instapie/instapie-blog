@@ -22,8 +22,9 @@ function isAuthenticated() {
 }
 
 // TODO: Refactor this ridiculous mess here.
-var editors    = {};
-var idCounter  = 1;
+var editors   = {};
+var ajaxCache = {};
+var idCounter = 1;
 
 function getContainerElement(node) {
   var element = node;
@@ -442,6 +443,12 @@ function doAfterDelay(delay, callback) {
 }
 
 function getWithAjax(path, callback) {
+  var cachedResult = ajaxCache[path];
+  if (cachedResult) {
+    callback(cachedResult);
+    return;
+  }
+
   var xhr = new XMLHttpRequest();
   xhr.open('GET', path);
 
