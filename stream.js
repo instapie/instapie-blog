@@ -466,6 +466,24 @@ function getWithAjax(path, callback) {
   xhr.send();
 }
 
+function throttle(fn, period) {
+  var timeoutId;
+
+  return function() {
+    var self = this,
+        args = arguments;
+
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    timeoutId = setTimeout(function() {
+      fn.apply(self, args);
+      timeoutId = null;
+    }, period);
+  };
+}
+
 function arrayContains(array, element) {
   for (var i = 0; i < array.length; ++i) {
     if (array[i] === element) {
@@ -886,6 +904,8 @@ window.addEventListener('load', function() {
           wrapper.classList.add('autoremove');
 
           var renderCssForMode = function() {
+            notify('Rendering CSS!');
+
             var raw = cssEditor.getValue();
 
             switch (mode) {
@@ -909,11 +929,9 @@ window.addEventListener('load', function() {
             }
           };
 
-          cssEditor.on('change', function() {
-            renderCssForMode();
-          });
+          cssEditor.on('change', throttle(renderCssForMode, 300));
 
-          getWithAjax('articulate.' + mode, function(source) {
+          getWithAjax('src/stream.' + mode, function(source) {
             cssEditor.setValue(source);
           });
         });
