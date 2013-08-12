@@ -1170,7 +1170,7 @@ window.addEventListener('load', function() {
 
         // Also, update the document title if this is the top heading.
         if (e.target === article.firstChild) {
-          document.title = e.target.textContent;
+          document.title = e.target.textContent + '*';
         }
       }
     });
