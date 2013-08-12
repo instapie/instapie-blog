@@ -719,34 +719,45 @@ window.addEventListener('load', function() {
     return articles[articleName];
   }
 
-  function getDocumentHtml() {
-    var clone = document.documentElement.cloneNode(true);
+  function getArticleHtml() {
+    var clone = article.cloneNode(true);
 
-    // Just declare the counter once.
-    var i;
+    // First, we'll find all CodeMirror instances and replace them with simple <pre> elements.
+    Lazy(clone.querySelectorAll('.CodeMirror')).each(function(editor) {
+      replaceEditor(editor);
+    });
 
-    // First, let's strip all contenteditable elements of that attribute.
-    disableEditing(clone);
+    // Next, we'll find all those canvases we were drawing on and replace them with <img> elements.
+    var drawingAreas = article.querySelectorAll('canvas');
+    Lazy(clone.querySelectorAll('canvas')).each(function(clonedCanvas, i) {
+      replaceDrawingArea(clonedCanvas, drawingAreas[i]);
+    });
 
-    // Let's also clear the shortcuts table.
-    clone.querySelector('#shortcuts table').innerHTML = '';
+    var elementsHtml = Lazy(clone.children)
+      .map(function(element) {
+        var nodeName = element.nodeName.toLowerCase();
 
-    // Next, we'll find all CodeMirror instances and replace them with simple
-    // <pre> elements.
-    var existingEditors = clone.querySelectorAll('.CodeMirror');
-    for (i = 0; i < existingEditors.length; ++i) {
-      replaceEditor(existingEditors[i]);
-    }
+        if (nodeName === 'img') {
+          return '<img src="' + element.src + '" />';
+        } else {
+          return '<' + nodeName + '>' + element.innerHTML + '</' + nodeName + '>';
+        }
+      });
 
-    // Finally, we'll find all those canvases we were drawing on and replace
-    // them with <img> elements.
-    var drawingAreas = document.querySelectorAll('canvas');
-    var clonedDrawingAreas = clone.querySelectorAll('canvas');
-    for (i = 0; i < drawingAreas.length; ++i) {
-      replaceDrawingArea(clonedDrawingAreas[i], drawingAreas[i]);
-    }
+    return elementsHtml.join('\n\n');
+  }
 
-    return '<!DOCTYPE html>\n' + clone.outerHTML;
+  function getDocumentHtml(callback) {
+    var articleHtml = getArticleHtml();
+
+    getWithAjax('templates/index.mustache', function(template) {
+      var html = Mustache.render(template, {
+        title: document.title,
+        article: articleHtml
+      });
+
+      callback(html);
+    });
   }
 
   function replaceEditor(wrapper) {
@@ -775,16 +786,6 @@ window.addEventListener('load', function() {
     parent.removeChild(overlay);
   }
 
-  function saveArticle(articleName) {
-    var articles = JSON.parse(localStorage.articles || '{}');
-    articles[articleName] = getDocumentHtml();
-    localStorage.articles = JSON.stringify(articles);
-    localStorage.lastArticleName = articleName;
-
-    pristine();
-    notify('Saved!');
-  }
-
   function save(message) {
     if (!isAuthenticated()) {
       notify("You aren't authorized to update this document!", 'error');
@@ -794,17 +795,17 @@ window.addEventListener('load', function() {
     // Don't worry -- if the save fails, we'll dirty it again.
     pristine();
 
-    var content = getDocumentHtml();
+    getDocumentHtml(function(documentHtml) {
+      Repo.write(GITHUB_BRANCH, 'index.html', documentHtml, message, function(err) {
+        if (err) {
+          // See? Just like I promised.
+          dirty();
+          notify(err, 'error');
 
-    Repo.write(GITHUB_BRANCH, 'index.html', content, message, function(err) {
-      if (err) {
-        // See? Just like I promised.
-        dirty();
-        notify(err, 'error');
-
-      } else {
-        notify('Saved to GitHub!');
-      }
+        } else {
+          notify('Saved to GitHub!');
+        }
+      });
     });
   }
 
