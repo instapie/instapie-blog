@@ -780,7 +780,7 @@ window.addEventListener('load', function() {
   function getDocumentHtml(callback) {
     var articleHtml = getArticleHtml();
 
-    getWithAjax('templates/index.mustache', function(template) {
+    getWithAjax('src/index.mustache', function(template) {
       var html = Mustache.render(template, {
         title: document.title,
         article: articleHtml
