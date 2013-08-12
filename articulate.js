@@ -800,7 +800,7 @@ window.addEventListener('load', function() {
         if (err) {
           // See? Just like I promised.
           dirty();
-          notify(err, 'error');
+          notify('Unable to sync to GitHub!', 'error');
 
         } else {
           notify('Saved to GitHub!');
