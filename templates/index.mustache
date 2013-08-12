@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Stream*</title>
+    <title>{{title}}</title>
     <link rel="stylesheet" type="text/css" href="lib/codemirror.css">
     <link rel="stylesheet" type="text/css" href="lib/sketchy.css">
     <link rel="stylesheet" type="text/css" href="articulate.css">
@@ -42,17 +42,19 @@
 
 <body class="loading">
     <nav>
-        <ul><li class="h1"><a href="#stream">Stream</a></li><li class="h2"><a href="#what-is-it-">What is it?</a></li></ul>
+        <ul></ul>
     </nav>
 
     <aside id="notices">
         <ul></ul>
     </aside>
 
-    <article><h1 id="stream">Stream</h1><p>So this is a work in progress. But so far I'm pretty pleased with how it's shaping up.</p><h2 id="what-is-it-">What is it?</h2><p>I'm Dan. Right now, I can edit this document, right in my browser, but nobody else can. That's because I have my GitHub credentials saved in my browser's <code>localStorage</code> (yeah, yeah, I know; <a href="">bad practice</a> or whatever... I'll get to that in a minute).</p></article>
+    <article>
+      {{{article}}}
+    </article>
 
     <div id="toolbar">
-        <button id="save">Save*</button>
+        <button id="save">Save</button>
     </div>
 
     <div id="modal-input" class="autohide">

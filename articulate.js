@@ -266,6 +266,7 @@ function createNewElement(name) {
   var newElement = createElement(name, { contenteditable: true });
   article.appendChild(newElement);
   focus(newElement);
+  return newElement;
 }
 
 function removeElement(element) {
@@ -440,6 +441,24 @@ function doAfterDelay(delay, callback) {
   return setTimeout(callback, delay);
 }
 
+function getWithAjax(path, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', path);
+
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      callback(xhr.responseText);
+    }
+  };
+
+  xhr.onerror = function() {
+    notify('File ' + path + 'does not exist!', error);
+    callback('');
+  };
+
+  xhr.send();
+}
+
 function arrayContains(array, element) {
   for (var i = 0; i < array.length; ++i) {
     if (array[i] === element) {
@@ -534,6 +553,8 @@ window.addEventListener('load', function() {
   var shortcutsTable = document.querySelector('#shortcuts table');
   var inputDialog    = document.getElementById('modal-input');
   var inputField     = inputDialog.querySelector('input');
+  var passwordDialog = document.getElementById('modal-password-input');
+  var passwordField  = passwordDialog.querySelector('input');
   var blobDialog     = document.getElementById('modal-blob');
   var blobField      = blobDialog.querySelector('textarea');
   var listDialog     = document.getElementById('modal-list');
@@ -541,6 +562,7 @@ window.addEventListener('load', function() {
   var inputList      = listDialog.querySelector('ul');
   var saveButton     = document.getElementById('save');
   var tokenButton    = document.getElementById('set-token');
+  var customStyles   = document.getElementById('custom-styles');
 
   function getInputFromDialog(dialog, field, caption, callback) {
     field.setAttribute('placeholder', caption);
@@ -572,6 +594,10 @@ window.addEventListener('load', function() {
 
   function getInput(caption, callback) {
     getInputFromDialog(inputDialog, inputField, caption, callback);
+  }
+
+  function getPassword(caption, callback) {
+    getInputFromDialog(passwordDialog, passwordField, caption, callback);
   }
 
   function getBlob(caption, callback) {
@@ -693,31 +719,45 @@ window.addEventListener('load', function() {
     return articles[articleName];
   }
 
-  function getDocumentHtml() {
-    var clone = document.documentElement.cloneNode(true);
+  function getArticleHtml() {
+    var clone = article.cloneNode(true);
 
-    // Just declare the counter once.
-    var i;
+    // First, we'll find all CodeMirror instances and replace them with simple <pre> elements.
+    Lazy(clone.querySelectorAll('.CodeMirror')).each(function(editor) {
+      replaceEditor(editor);
+    });
 
-    // First, let's strip all contenteditable elements of that attribute.
-    disableEditing(clone);
+    // Next, we'll find all those canvases we were drawing on and replace them with <img> elements.
+    var drawingAreas = article.querySelectorAll('canvas');
+    Lazy(clone.querySelectorAll('canvas')).each(function(clonedCanvas, i) {
+      replaceDrawingArea(clonedCanvas, drawingAreas[i]);
+    });
 
-    // Next, we'll find all CodeMirror instances and replace them with simple
-    // <pre> elements.
-    var existingEditors = clone.querySelectorAll('.CodeMirror');
-    for (i = 0; i < existingEditors.length; ++i) {
-      replaceEditor(existingEditors[i]);
-    }
+    var elementsHtml = Lazy(clone.children)
+      .map(function(element) {
+        var nodeName = element.nodeName.toLowerCase();
 
-    // Finally, we'll find all those canvases we were drawing on and replace
-    // them with <img> elements.
-    var drawingAreas = document.querySelectorAll('canvas');
-    var clonedDrawingAreas = clone.querySelectorAll('canvas');
-    for (i = 0; i < drawingAreas.length; ++i) {
-      replaceDrawingArea(clonedDrawingAreas[i], drawingAreas[i]);
-    }
+        if (nodeName === 'img') {
+          return '<img src="' + element.src + '" />';
+        } else {
+          return '<' + nodeName + '>' + element.innerHTML + '</' + nodeName + '>';
+        }
+      });
 
-    return '<!DOCTYPE html>\n' + clone.outerHTML;
+    return elementsHtml.join('\n\n');
+  }
+
+  function getDocumentHtml(callback) {
+    var articleHtml = getArticleHtml();
+
+    getWithAjax('templates/index.mustache', function(template) {
+      var html = Mustache.render(template, {
+        title: document.title,
+        article: articleHtml
+      });
+
+      callback(html);
+    });
   }
 
   function replaceEditor(wrapper) {
@@ -746,30 +786,26 @@ window.addEventListener('load', function() {
     parent.removeChild(overlay);
   }
 
-  function saveArticle(articleName) {
-    var articles = JSON.parse(localStorage.articles || '{}');
-    articles[articleName] = getDocumentHtml();
-    localStorage.articles = JSON.stringify(articles);
-    localStorage.lastArticleName = articleName;
-
-    pristine();
-    notify('Saved!');
-  }
-
   function save(message) {
     if (!isAuthenticated()) {
       notify("You aren't authorized to update this document!", 'error');
     }
 
-    var content = getDocumentHtml();
+    // Marking pristine BEFORE getting HTML so that it saves nice and clean.
+    // Don't worry -- if the save fails, we'll dirty it again.
+    pristine();
 
-    Repo.write(GITHUB_BRANCH, 'index.html', content, message, function(err) {
-      if (err) {
-        notify(err, 'error');
+    getDocumentHtml(function(documentHtml) {
+      Repo.write(GITHUB_BRANCH, 'index.html', documentHtml, message, function(err) {
+        if (err) {
+          // See? Just like I promised.
+          dirty();
+          notify(err, 'error');
 
-      } else {
-        notify('Saved to GitHub!');
-      }
+        } else {
+          notify('Saved to GitHub!');
+        }
+      });
     });
   }
 
@@ -828,6 +864,52 @@ window.addEventListener('load', function() {
         }
 
         createNewElement('P');
+      }],
+
+      'ctrl+shift+c': [true, 'opens up a CSS editor', function() {
+        getListSelection('Select a language mode', ['css', 'less', 'sass'], function(mode) {
+          var textarea = createNewElement('textarea');
+          var cssEditor = CodeMirror.fromTextArea(textarea, {
+            mode: mode,
+            autofocus: true
+          });
+
+          var wrapper = cssEditor.getWrapperElement();
+          wrapper.id = 'css-editor';
+          wrapper.classList.add('autoremove');
+
+          var renderCssForMode = function() {
+            var raw = cssEditor.getValue();
+
+            switch (mode) {
+              case 'css':
+                customStyles.textContent = raw;
+                break;
+
+              case 'less':
+                new less.Parser().parse(raw, function(err, tree) {
+                  if (err) {
+                    return;
+                  }
+
+                  customStyles.textContent = tree.toCSS();
+                });
+                break;
+
+              case 'sass':
+                customStyles.textContent = sass.render(raw);
+                break;
+            }
+          };
+
+          cssEditor.on('change', function() {
+            renderCssForMode();
+          });
+
+          getWithAjax('articulate.' + mode, function(source) {
+            cssEditor.setValue(source);
+          });
+        });
       }],
 
       'enter': [true, 'creates a new element', function(e) {
@@ -936,9 +1018,16 @@ window.addEventListener('load', function() {
       }],
 
       'esc': [true, null, function() {
+        var i;
+
+        var autoremoveElements = document.querySelectorAll('.autoremove');
+        for (i = 0; i < autoremoveElements.length; ++i) {
+          autoremoveElements[i].parentNode.removeChild(autoremoveElements[i]);
+        }
+
         var autohideElements = document.querySelectorAll('.autohide.visible');
         if (autohideElements.length > 0) {
-          for (var i = 0; i < autohideElements.length; ++i) {
+          for (i = 0; i < autohideElements.length; ++i) {
             hideElement(autohideElements[i]);
           }
           return;
@@ -973,6 +1062,15 @@ window.addEventListener('load', function() {
       }]
     });
 
+    // Mark all of the immediate children of <article> as editable.
+    for (var i = 0; i < article.children.length; ++i) {
+      if (article.children[i].nodeName.match(/^IMG|CANVAS$/)) {
+        continue;
+      }
+      
+      article.children[i].setAttribute('contenteditable', true);
+    }
+
     // Whenever the user makes changes...
     article.addEventListener('input', function(e) {
 
@@ -982,6 +1080,11 @@ window.addEventListener('load', function() {
       // ...and update the nav menu (if applicable).
       if (isHeading(e.target.nodeName)) {
         updateNav();
+
+        // Also, update the document title if this is the top heading.
+        if (e.target === article.firstChild) {
+          document.title = e.target.textContent;
+        }
       }
     });
 
@@ -998,6 +1101,19 @@ window.addEventListener('load', function() {
       }
 
       notify(message, 'error');
+    });
+  }
+
+  function initializeForViewing() {
+    Mousetrap.bind('ctrl+shift+g', function() {
+      getInput('Enter your GitHub user name', function(username) {
+        localStorage.GithubUsername = username;
+
+        getPassword('Enter your GitHub password', function(password) {
+          localStorage.GithubPassword = password;
+          window.location.reload();
+        });
+      });
     });
   }
 
@@ -1019,6 +1135,7 @@ window.addEventListener('load', function() {
     initializeDrawingAreas();
 
   } else {
+    initializeForViewing();
     disableEditing(document);
     hideShortcutMenu();
   }
