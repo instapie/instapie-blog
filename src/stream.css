@@ -1,10 +1,21 @@
-@import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700|Source+Sans+Pro);
+@import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700);
+
+@media all and (min-width: 1200px) {
+  body {
+    font-size: 16px;
+  }
+}
 
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
+}
+
+body {
+  background-color: #ddd;
+  font-family: "Source Sans Pro", sans-serif;
 }
 
 body.loading:before {
@@ -18,56 +29,43 @@ body.loading:before {
   z-index: 1;
 }
 
-body {
-    background-color: #ddd;
-    font-family: "Source Sans Pro", sans-serif;
+nav ul li a:visited {
+  color: #00f;
 }
 
-body nav ul li a:visited {
-    color: #00f;
+nav ul li a:hover {
+  color: #48f;
 }
 
-body nav ul li a:hover {
-    color: #48f;
+h1 {
+  font-size: 250%;
+  font-weight: 300;
+  min-height: 52pt;
+  border-bottom: 1px solid black;
 }
 
-body h1 {
-    font-size: 48pt;
-    font-weight: 300;
-    min-height: 52pt;
-    border-bottom: 1px solid black;
+h2 {
+  font-size: 200%;
+  min-height: 42pt;
+  border-left: 8px solid #888;
+  padding-left: 16px;
 }
 
-body h2 {
-    font-size: 40pt;
-    min-height: 42pt;
-    border-left: 8px solid #888;
-    padding-left: 16px;
+h3 {
+  color: #444;
+  font-size: 150%;
+  font-weight: bold;
+  min-height: 34pt;
+  border-left: 8px solid #bbb;
+  padding-left: 16px;
 }
 
-body h3 {
-    color: #444;
-    font-size: 32pt;
-    font-weight: bold;
-    min-height: 34pt;
-    border-left: 8px solid #bbb;
-    padding-left: 16px;
+p {
+  min-height: 20px;
 }
 
-body p {
-    min-height: 20px;
-}
-
-body a {
-    cursor: pointer;
-}
-
-body article {
-    background-color: #eee;
-}
-
-body article *:focus {
-    background-color: #ffe;
+a {
+  cursor: pointer;
 }
 
 nav {
@@ -98,20 +96,18 @@ nav ul li.h3 a {
   padding-left: 24px;
 }
 
-@media all and (min-width: 1200px) {
-  article {
-    font-size: 16pt;
-  }
-}
-
 article {
-  width: 50%;
+  width: 960px;
   margin: 0 auto;
   padding: 24pt 32pt;
   min-height: 100%;
-  min-width: 960px;
+  background-color: #eee;
   box-sizing: border-box;
   z-index: 1;
+}
+
+article [contenteditable]:focus {
+  background-color: #ffe;
 }
 
 article p:empty {

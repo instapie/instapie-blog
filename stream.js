@@ -25,6 +25,7 @@ function isAuthenticated() {
 var editors   = {};
 var ajaxCache = {};
 var idCounter = 1;
+var customCss = null;
 
 function getContainerElement(node) {
   var element = node;
@@ -539,6 +540,10 @@ function isInCodeEditor(e) {
   return belongsTo(e.target, 'CodeMirror');
 }
 
+function isInCssEditor() {
+  return !!document.getElementById('css-editor');
+}
+
 function isModalShowing() {
   return !!document.querySelector('.autohide.visible');
 }
@@ -785,6 +790,10 @@ window.addEventListener('load', function() {
     });
   }
 
+  function getCurrentCss() {
+    return customStyles.textContent;
+  }
+
   function replaceEditor(wrapper) {
     var editorId = wrapper.getAttribute('data-editor-id');
     var editor = editors[editorId];
@@ -814,6 +823,7 @@ window.addEventListener('load', function() {
   function save(message) {
     if (!isAuthenticated()) {
       notify("You aren't authorized to update this document!", 'error');
+      return;
     }
 
     // Marking pristine BEFORE getting HTML so that it saves nice and clean.
@@ -831,6 +841,38 @@ window.addEventListener('load', function() {
           notify('Saved to GitHub!');
         }
       });
+    });
+  }
+
+  function saveCss(message) {
+    if (!isAuthenticated()) {
+      notify("You aren't authorized to update this document!", 'error');
+      return;
+    }
+
+    if (!customCss) {
+      notify("There's nothing to save!", 'error');
+      return;
+    }
+
+    Repo.write(GITHUB_BRANCH, 'src/stream.' + customCss.mode, customCss.content, message, function(err) {
+      if (err) {
+        notify('Unable to sync to GitHub!', 'error');
+
+      } else {
+        notify('Saved ' + customCss.mode + ' to GitHub!');
+      }
+    });
+
+    var css = getCurrentCss();
+
+    Repo.write(GITHUB_BRANCH, 'stream.css', css, message, function(err) {
+      if (err) {
+        notify('Unable to sync to GitHub!', 'error');
+
+      } else {
+        notify('Saved CSS to GitHub!');
+      }
     });
   }
 
@@ -903,10 +945,24 @@ window.addEventListener('load', function() {
           wrapper.id = 'css-editor';
           wrapper.classList.add('autoremove');
 
-          var renderCssForMode = function() {
-            notify('Rendering CSS!');
+          var removeOriginalStylesheet = function() {
+            var stylesheet = document.querySelector('link[href="stream.css"]');
+            stylesheet.parentNode.removeChild(stylesheet);
+          };
 
+          var renderCssForMode = function() {
             var raw = cssEditor.getValue();
+
+            if (!customCss) {
+              customCss = {
+                mode: mode,
+                content: raw
+              };
+
+            } else {
+              customCss.mode = mode;
+              customCss.content = raw;
+            }
 
             switch (mode) {
               case 'css':
@@ -919,6 +975,7 @@ window.addEventListener('load', function() {
                     return;
                   }
 
+                  customCss.mode = 'less';
                   customStyles.textContent = tree.toCSS();
                 });
                 break;
@@ -927,6 +984,8 @@ window.addEventListener('load', function() {
                 customStyles.textContent = sass.render(raw);
                 break;
             }
+
+            cssEditor.refresh();
           };
 
           cssEditor.on('change', throttle(renderCssForMode, 300));
@@ -1082,7 +1141,11 @@ window.addEventListener('load', function() {
 
       'ctrl+s': [true, 'saves the article', function() {
         getInput('Enter a commit message', function(message) {
-          save(message);
+          if (isInCssEditor()) {
+            saveCss(message);
+          } else {
+            save(message);
+          }
         });
       }]
     });
