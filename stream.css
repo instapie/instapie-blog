@@ -1,11 +1,5 @@
 @import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700);
 
-@media all and (min-width: 1200px) {
-  body {
-    font-size: 20px;
-  }
-}
-
 html, body {
   margin: 0;
   padding: 0;
@@ -27,14 +21,6 @@ body.loading:before {
   right: 0;
   background: #fff url("loading.gif") no-repeat center;
   z-index: 1;
-}
-
-nav ul li a:visited {
-  color: #00f;
-}
-
-nav ul li a:hover {
-  color: #48f;
 }
 
 h1 {
@@ -71,8 +57,13 @@ a {
 nav {
   position: fixed;
   top: 0;
-  left: 0;
+  left: 50%;
   padding: 12px;
+  width: 300px;
+  margin-left: -780px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  text-align: right;
 }
 
 nav ul {
@@ -80,7 +71,16 @@ nav ul {
 }
 
 nav ul li a {
+  color: #48f;
   text-decoration: none;
+}
+
+nav ul li a:hover {
+  color: #8bf;
+}
+
+nav ul li a:visited {
+  color: #48f;
 }
 
 nav ul li.h1 a {
@@ -103,6 +103,7 @@ article {
   min-height: 100%;
   background-color: #eee;
   box-sizing: border-box;
+  -moz-box-sizing: border-box;
   z-index: 1;
 }
 
@@ -385,4 +386,32 @@ article kbd {
 
 .visible {
   display: block;
+}
+
+@media all and (min-width: 1200px) {
+  body {
+    font-size: 20px;
+  }
+}
+
+@media all and (max-width: 1560px) {
+  nav {
+    left: 0;
+    margin-left: 0;
+  }
+
+  article {
+    margin: 0 0 0 300px;
+  }
+}
+
+@media all and (max-width: 1260px) {
+  nav {
+    display: none;
+  }
+
+  article {
+    margin: 0 auto;
+    width: auto;
+  }
 }
