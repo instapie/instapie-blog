@@ -29,7 +29,7 @@ var customCss = null;
 
 function getContainerElement(node) {
   var element = node;
-  while (element && element.nodeType !== 1) {
+  while (element && (element.nodeType !== 1 || !element.getAttribute('contenteditable'))) {
     element = element.parentNode;
   }
   return element;
