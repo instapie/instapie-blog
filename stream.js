@@ -582,7 +582,9 @@ window.addEventListener('load', function() {
   var listDialog     = document.getElementById('modal-list');
   var listCaption    = listDialog.querySelector('h1');
   var inputList      = listDialog.querySelector('ul');
+  var loginButton    = document.getElementById('login');
   var saveButton     = document.getElementById('save');
+  var logoutButton   = document.getElementById('logout');
   var tokenButton    = document.getElementById('set-token');
   var customStyles   = document.getElementById('custom-styles');
 
@@ -813,6 +815,23 @@ window.addEventListener('load', function() {
     parent.insertBefore(img, canvas);
     parent.removeChild(canvas);
     parent.removeChild(overlay);
+  }
+
+  function login() {
+    getInput('Enter your GitHub user name', function(username) {
+      localStorage.GithubUsername = username;
+
+      getPassword('Enter your GitHub password', function(password) {
+        localStorage.GithubPassword = password;
+        window.location.reload();
+      });
+    });
+  }
+
+  function logout() {
+    delete localStorage.GithubUsername;
+    delete localStorage.GithubPassword;
+    window.location.reload();
   }
 
   function save(message) {
@@ -1193,6 +1212,8 @@ window.addEventListener('load', function() {
       });
     });
 
+    logoutButton.addEventListener('click', logout);
+
     window.addEventListener('error', function(e) {
       var message = e.message;
       if (e.lineNumber || e.lineno) {
@@ -1201,19 +1222,14 @@ window.addEventListener('load', function() {
 
       notify(message, 'error');
     });
+
+    loginButton.parentNode.removeChild(loginButton);
   }
 
   function initializeForViewing() {
-    Mousetrap.bind('ctrl+shift+g', function() {
-      getInput('Enter your GitHub user name', function(username) {
-        localStorage.GithubUsername = username;
-
-        getPassword('Enter your GitHub password', function(password) {
-          localStorage.GithubPassword = password;
-          window.location.reload();
-        });
-      });
-    });
+    loginButton.addEventListener('click', login);
+    saveButton.parentNode.removeChild(saveButton);
+    logoutButton.parentNode.removeChild(logoutButton);
   }
 
   function disableEditing(container) {
@@ -1232,6 +1248,7 @@ window.addEventListener('load', function() {
     initializeForEditing();
     initializeEditors();
     initializeDrawingAreas();
+    pristine();
 
   } else {
     initializeForViewing();

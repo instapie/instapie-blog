@@ -191,14 +191,24 @@ article kbd {
 #toolbar {
   position: fixed;
   bottom: 0;
-  left: 25%;
-  right: 25%;
+  left: 0;
+  right: 0;
   padding: 12px;
   text-align: right;
 }
 
 #toolbar button {
   padding: 8px;
+  background-color: #000;
+  border: 1px solid black;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+}
+
+#toolbar button:hover {
+  background-color: #444;
+  color: #def;
 }
 
 #modal-input,
