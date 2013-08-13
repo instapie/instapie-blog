@@ -113,9 +113,9 @@ function hideElement(element) {
 
 function createElement(name, attributes) {
   var element = document.createElement(name);
-  for (var attribute in (attributes || {})) {
-    element.setAttribute(attribute, attributes[attribute]);
-  }
+  Lazy(attributes).each(function(value, name) {
+    element.setAttribute(name, value);
+  });
   return element;
 }
 
@@ -297,10 +297,10 @@ function updateNav() {
   navList.innerHTML = '';
 
   var headings = document.querySelectorAll('article > h1, article > h2, article > h3');
-  for (var i = 0; i < headings.length; ++i) {
-    setIdForHeading(headings[i]);
-    addNavListItemForHeading(navList, headings[i]);
-  }
+  Lazy(headings).each(function(heading) {
+    setIdForHeading(heading);
+    addNavListItemForHeading(navList, heading);
+  });
 }
 
 function initializeEditors() {
@@ -308,9 +308,9 @@ function initializeEditors() {
   idCounter = 1;
 
   var pres = document.querySelectorAll('article > pre');
-  for (var i = 0; i < pres.length; ++i) {
-    initializeEditor(pres[i], pres[i].getAttribute('data-mode'));
-  }
+  Lazy(pres).each(function(pre) {
+    initializeEditor(pre, pre.getAttribute('data-mode'));
+  });
 }
 
 function initializeEditor(textarea, mode) {
@@ -334,9 +334,9 @@ function initializeEditor(textarea, mode) {
 function initializeDrawingAreas() {
   var images = document.querySelectorAll('article > img[src*="data:image/png;base64"]');
 
-  for (var i = 0; i < images.length; ++i) {
-    initializeDrawingArea(images[i]);
-  }
+  Lazy(images).each(function(image) {
+    initializeDrawingArea(image);
+  });
 }
 
 function initializeDrawingArea(image) {
@@ -548,14 +548,7 @@ function isModalShowing() {
 }
 
 function getAvailableModes() {
-  var modes = Object.keys(CodeMirror.modes);
-  for (var i = modes.length - 1; i >= 0; --i) {
-    if (modes[i] === 'null') {
-      modes.splice(i, 1);
-      break;
-    }
-  }
-  return modes;
+  return Lazy(CodeMirror.modes).keys().without('null').toArray();
 }
 
 function belongsTo(element, parentClass) {
@@ -639,9 +632,9 @@ window.addEventListener('load', function() {
     // Be sure the list is empty before proceeding.
     inputList.innerHTML = '';
 
-    for (var i = 0; i < list.length; ++i) {
-      addItemToList(inputList, list[i]);
-    }
+    Lazy(list).each(function(listItem) {
+      addItemToList(inputList, listItem);
+    });
 
     blurCurrentElement();
     showElement(listDialog);
@@ -1108,18 +1101,16 @@ window.addEventListener('load', function() {
       }],
 
       'esc': [true, null, function() {
-        var i;
-
-        var autoremoveElements = document.querySelectorAll('.autoremove');
-        for (i = 0; i < autoremoveElements.length; ++i) {
-          autoremoveElements[i].parentNode.removeChild(autoremoveElements[i]);
-        }
+        Lazy(document.querySelectorAll('.autoremove')).each(function(element) {
+          element.parentNode.removeChild(element);
+        });
 
         var autohideElements = document.querySelectorAll('.autohide.visible');
+        Lazy(autohideElements).each(function(element) {
+          hideElement(element);
+        });
+
         if (autohideElements.length > 0) {
-          for (i = 0; i < autohideElements.length; ++i) {
-            hideElement(autohideElements[i]);
-          }
           return;
         }
 
@@ -1157,13 +1148,19 @@ window.addEventListener('load', function() {
     });
 
     // Mark all of the immediate children of <article> as editable.
-    for (var i = 0; i < article.children.length; ++i) {
-      if (article.children[i].nodeName.match(/^IMG|CANVAS$/)) {
-        continue;
-      }
-      
-      article.children[i].setAttribute('contenteditable', true);
-    }
+    Lazy(article.children)
+      .reject(function(child) { return child.nodeName.match(/^IMG|CANVAS$/); })
+      .each(function(child) {
+        // For lists, mark all of the LIST's children as editable.
+        if (child.nodeName === 'UL') {
+          Lazy(child.children).each(function(listItem) {
+            listItem.setAttribute('contenteditable', true);
+          });
+
+        } else {
+          child.setAttribute('contenteditable', true);
+        }
+      });
 
     // Whenever the user makes changes...
     article.addEventListener('input', function(e) {
@@ -1214,9 +1211,9 @@ window.addEventListener('load', function() {
   function disableEditing(container) {
     var editableElements = container.querySelectorAll('[contenteditable]');
 
-    for (var i = 0; i < editableElements.length; ++i) {
-      editableElements[i].removeAttribute('contenteditable');
-    }
+    Lazy(editableElements).each(function(element) {
+      element.removeAttribute('contenteditable');
+    });
   }
 
   function hideShortcutMenu() {
