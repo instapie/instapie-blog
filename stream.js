@@ -1255,7 +1255,6 @@ window.addEventListener('load', function() {
   if (isAuthenticated()) {
     initializeForEditing();
     initializeDrawingAreas();
-    pristine();
 
   } else {
     initializeForViewing();
@@ -1265,4 +1264,5 @@ window.addEventListener('load', function() {
 
   updateNav();
   initializeEditors();
+  pristine();
 });
