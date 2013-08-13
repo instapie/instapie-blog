@@ -755,18 +755,21 @@ window.addEventListener('load', function() {
       replaceDrawingArea(clonedCanvas, drawingAreas[i]);
     });
 
-    var elementsHtml = Lazy(clone.children)
+    var htmlSnippets = Lazy(clone.children)
       .map(function(element) {
         var nodeName = element.nodeName.toLowerCase();
 
-        if (nodeName === 'img') {
-          return '<img src="' + element.src + '" />';
-        } else {
-          return '<' + nodeName + '>' + element.innerHTML + '</' + nodeName + '>';
+        switch (nodeName) {
+          case 'img':
+            return '<img src="' + element.src + '" />';
+          case 'pre':
+            return '<pre data-mode="' + element.getAttribute('data-mode') + '">' + element.innerHTML + '</pre>';
+          default:
+            return '<' + nodeName + '>' + element.innerHTML + '</' + nodeName + '>';
         }
       });
 
-    return elementsHtml.join('\n\n');
+    return htmlSnippets.join('\n\n');
   }
 
   function getDocumentHtml(callback) {
@@ -1126,6 +1129,11 @@ window.addEventListener('load', function() {
             removeElement(currentElement);
           }
         }
+      }],
+
+      'ctrl+h': [true, null, function() {
+        blobField.value = getArticleHtml();
+        getBlob('Here is the current HTML', function() {});
       }],
 
       'ctrl+=': [true, 'increases the width of the article', function() {
