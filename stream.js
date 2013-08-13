@@ -62,14 +62,22 @@ function dirty() {
   if (!document.title.match(/\*$/)) {
     document.title += '*';
   }
-  document.getElementById('save').textContent = 'Save*';
+
+  var button = document.getElementById('save');
+  if (button) {
+    button.textContent = 'Save*';
+  }
 }
 
 function pristine() {
   if (document.title.match(/\*$/)) {
     document.title = document.title.substring(0, document.title.length - 1);
   }
-  document.getElementById('save').textContent = 'Save';
+
+  var button = document.getElementById('save');
+  if (button) {
+    button.textContent = 'Save';
+  }
 }
 
 function blurCurrentElement() {
