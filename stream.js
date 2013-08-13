@@ -321,7 +321,7 @@ function initializeEditor(textarea, mode) {
   var editor = CodeMirror.fromTextArea(textarea, {
     mode: mode,
     viewportMargin: Infinity,
-    readOnly: !GITHUB_PASSWORD
+    readOnly: !isAuthenticated()
   });
 
   var editorId = idCounter++;
@@ -1246,7 +1246,6 @@ window.addEventListener('load', function() {
 
   if (isAuthenticated()) {
     initializeForEditing();
-    initializeEditors();
     initializeDrawingAreas();
     pristine();
 
@@ -1257,4 +1256,5 @@ window.addEventListener('load', function() {
   }
 
   updateNav();
+  initializeEditors();
 });
