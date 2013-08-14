@@ -83,6 +83,12 @@ nav ul li.h1 a {
   font-size: 150%;
 }
 
+nav ul li.h1:nth-of-type(n+2) {
+  border-top: 1px solid #444;
+  margin-top: 16px;
+  padding-top: 16px;
+}
+
 nav ul li.h2 a {
   color: #456;
   font-size: 125%;
