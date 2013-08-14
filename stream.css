@@ -61,6 +61,7 @@ nav {
   padding: 12px;
   width: 300px;
   margin-left: -780px;
+  background-color: #ddd;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   text-align: right;
@@ -429,6 +430,16 @@ article kbd {
 
   article {
     margin: 0 auto;
+    padding: 0 1em;
     width: auto;
+  }
+
+  h1:first-child {
+    margin-top: 0;
+    padding-top: 1ex;
+  }
+
+  #toolbar {
+    display: none;
   }
 }
