@@ -382,18 +382,6 @@ function addNavListItemForHeading(navList, heading) {
   item.appendChild(link);
 }
 
-function expandArticle() {
-  var articleStyle = getCssStyle('article');
-  var width = parseInt(getCssStyle('article').width);
-  articleStyle.width = (width + 5) + '%';
-}
-
-function contractArticle() {
-  var articleStyle = getCssStyle('article');
-  var width = parseInt(getCssStyle('article').width);
-  articleStyle.width = (width - 5) + '%';
-}
-
 function notify(message, className, attributes) {
   var notices = document.querySelector('#notices ul');
   var noticeItem = createElement('LI', attributes);
@@ -1161,14 +1149,6 @@ window.addEventListener('load', function() {
       'ctrl+h': [true, null, function() {
         blobField.value = getArticleHtml();
         getBlob('Here is the current HTML', function() {});
-      }],
-
-      'ctrl+=': [true, 'increases the width of the article', function() {
-        expandArticle();
-      }],
-
-      'ctrl+-': [true, 'decreases the width of the article', function() {
-        contractArticle();
       }],
 
       'ctrl+s': [true, 'saves the article', function() {
