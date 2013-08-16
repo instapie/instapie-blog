@@ -1,7 +1,8 @@
 // Set up authentication with GitHub
 var GITHUB_USERNAME   = localStorage.GithubUsername;
 var GITHUB_PASSWORD   = localStorage.GithubPassword;
-var GITHUB_REPOSITORY = 'stream';
+var GITHUB_ACCOUNT    = 'instapie';
+var GITHUB_REPOSITORY = 'instapie-blog';
 var GITHUB_BRANCH     = 'gh-pages';
 
 var Client = null;
@@ -14,7 +15,7 @@ if (GITHUB_PASSWORD) {
     auth: "basic"
   });
 
-  Repo = Client.getRepo(GITHUB_USERNAME, GITHUB_REPOSITORY);
+  Repo = Client.getRepo(GITHUB_ACCOUNT, GITHUB_REPOSITORY);
 }
 
 function isAuthenticated() {

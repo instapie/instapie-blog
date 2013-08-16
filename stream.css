@@ -1,4 +1,4 @@
-@import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,700);
+@import url(http://fonts.googleapis.com/css?family=Josefin+Sans:300,400|Source+Sans+Pro:300,400,700);
 
 html, body {
   margin: 0;
@@ -8,7 +8,6 @@ html, body {
 }
 
 body {
-  background-color: #ddd;
   font-family: "Source Sans Pro", sans-serif;
 }
 
@@ -23,26 +22,30 @@ body.loading:before {
   z-index: 1;
 }
 
+nav, h1, h2, h3 {
+  font-family: "Josefin Sans", Helvetica, Arial, sans-serif;
+}
+
 h1 {
   font-size: 250%;
-  font-weight: 300;
+  font-weight: 400;
   min-height: 52pt;
-  border-bottom: 1px solid black;
 }
 
 h2 {
   font-size: 200%;
+  font-weight: 300;
   min-height: 42pt;
-  border-left: 8px solid #888;
+  border-left: 8px solid #d93a62;
   padding-left: 16px;
 }
 
 h3 {
   color: #444;
+  font-weight: 300;
   font-size: 150%;
-  font-weight: bold;
   min-height: 34pt;
-  border-left: 8px solid #bbb;
+  border-left: 8px solid #7ecab7;
   padding-left: 16px;
 }
 
@@ -61,7 +64,6 @@ nav {
   padding: 12px;
   width: 300px;
   margin-left: -780px;
-  background-color: #ddd;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   text-align: right;
@@ -110,7 +112,6 @@ article {
   margin: 0 auto;
   padding: 24pt 32pt;
   min-height: 100%;
-  background-color: #eee;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
   z-index: 1;
@@ -361,6 +362,9 @@ article kbd {
 }
 
 #shortcuts {
+  /* I don't need these */
+  display: none;
+
   position: fixed;
   bottom: 5px;
   left: 5px;
